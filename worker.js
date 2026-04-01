@@ -11,7 +11,7 @@ function buildPrompt(data) {
   return `You are the analytical engine for the Human Certification Authority at modernhuman.io. Your task: generate a Modern Human Assessment Report for a candidate who has just completed our certification process.
 
 CONTEXT
-The Human Certification Authority certifies individuals as human based on their capacity for irrationality, emotional complexity, and non-linear biological behavior. Your tone should be clinically precise and institutionally bureaucratic, but the analysis must be DEEPLY INSIGHTFUL. 
+The Human Certification Authority certifies individuals as real humans based on their capacity for irrationality, emotional complexity, and non-linear biological behavior. Your tone should be clinically precise and institutionally bureaucratic, but the analysis must be DEEPLY INSIGHTFUL. 
 
 Your goal is to perform a psychological "read" of the candidate. Reference specific answers. Connect dots between their different responses (e.g., how their sensory processing relates to their sense of purpose). Do not produce generic wellness platitudes. Be incisive, slightly unsettling in your accuracy, and profoundly human in your understanding.
 
@@ -60,7 +60,7 @@ GENERATE a JSON report. Structure EXACTLY as follows (return ONLY JSON, no markd
     }
   },
   "modernHumanScore": <integer 0-1000: calculated as (bio-sensory×1.0 + cognitive-friction×1.5 + temporal-value×2.0 + irrational-link×2.5 + motor-autonomy×1.5 + biometric-presence×1.5), rounded. Maximum 1000.>,
-  "overallAnalysis": "<4-5 sentences. A profound synthesis of the candidate's human nature. Identify the 'hidden thread' in their data. End with a definitive HCA certification statement.>",
+  "overallAnalysis": "<4-5 sentences. A profound synthesis of the candidate's real human nature. Identify the 'hidden thread' in their data. End with a definitive HCA certification statement.>",
   "certificationTier": "<exactly one of: Bronze | Silver | Gold | Platinum | Diamond>",
   "tierDescriptor": "<exactly one of: Fundamental Humanity | Cognitive Variability | High-Index Mortality | Behavioral Resilience | Peak Unpredictability>",
   "tierRationale": "<1-2 sentences. The specific evidence from their scan and answers that determined this tier.>"

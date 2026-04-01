@@ -190,7 +190,7 @@ export default function Home() {
                 href="/assess/"
                 className="bg-white text-[#1B2E4B] px-4 py-2 hover:bg-white/90 transition-colors normal-case text-xs tracking-wide font-medium"
               >
-                Enter Certification Flow
+                Claim Your Human Status
               </Link>
             </nav>
           </div>
@@ -210,10 +210,10 @@ export default function Home() {
 
               <h1 className="mb-8 leading-none">
                 <span className="block font-mono text-sm tracking-[0.25em] uppercase text-white/40 mb-4">
-                  Prove your
+                  Prove you are
                 </span>
                 <span className="block text-[56px] sm:text-[80px] md:text-[96px] font-bold tracking-tight text-white leading-[0.92]">
-                  EXISTENCE.
+                  REAL.
                 </span>
               </h1>
 
@@ -223,8 +223,8 @@ export default function Home() {
               </div>
 
               <p className="text-[16px] text-white/65 max-w-sm leading-relaxed mb-6 font-serif italic">
-                In an era of synthetic consciousness, human status is no longer assumed. 
-                The HCA provides high-fidelity, data-backed certification of biological origin.
+                In an era of synthetic consciousness, being &quot;real&quot; is no longer a given. 
+                Defend your biological identity with the Global Human Registry.
               </p>
               <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-10 font-mono uppercase tracking-widest">
                 Our Movement Diagnostic captures sub-second organic variance—the &apos;Hard Proof&apos; that AI cannot simulate.
@@ -234,7 +234,7 @@ export default function Home() {
                 href="/assess/"
                 className="inline-flex items-center gap-4 bg-white text-[#1B2E4B] px-10 py-5 text-sm tracking-widest uppercase font-bold hover:bg-white/90 transition-colors shadow-2xl"
               >
-                Begin Assessment Protocol
+                Claim Your Human Status
                 <span className="font-mono text-[#1B2E4B]/40 text-xs">→</span>
               </Link>
             </div>
@@ -313,7 +313,7 @@ export default function Home() {
               </p>
             </div>
             <Link href="/assess/" className="bg-[#1B2E4B] text-white px-10 py-4 text-[10px] uppercase tracking-widest font-bold hover:bg-[#1B2E4B]/90 transition-colors shadow-2xl">
-              Start Evaluation Protocol
+              Claim Your Human Status
             </Link>
           </div>
 
@@ -346,10 +346,10 @@ export default function Home() {
             <div className="font-mono text-[9px] tracking-[0.4em] uppercase text-white/35 mb-8">
               HCA Registry Access / Primary Portal
             </div>
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white leading-tight tracking-tight">Claim your Humanity Dossier</h2>
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white leading-tight tracking-tight">Claim Your Human Status</h2>
             <p className="text-lg text-white/40 mb-12 leading-relaxed max-w-lg mx-auto font-serif italic">
-              Your record is verifiable instantly across all nodes. Valid for 12 months. 
-              Required for high-level interaction proof.
+              Your biological record is verifiable instantly across all nodes. Valid for 12 months. 
+              Secure your status on the global ledger.
             </p>
             <Link
               href="/assess/"

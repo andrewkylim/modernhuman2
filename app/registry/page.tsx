@@ -185,7 +185,7 @@ export default function RegistryPage() {
 
                 {/* Hover metadata */}
                 <div className="absolute inset-0 bg-[#1B2E4B]/90 text-white p-4 opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-center items-center text-center">
-                   <div className="font-mono text-[10px] tracking-[0.2em] mb-4 text-emerald-400">VIEW DOSSIER</div>
+                   <div className="font-mono text-[10px] tracking-[0.2em] mb-4 text-emerald-400">VIEW RECORD</div>
                    <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center">
                       <span className="text-xs">→</span>
                    </div>
@@ -214,6 +214,7 @@ export default function RegistryPage() {
            
            <div className="text-[9px] font-mono text-[#1B2E4B]/25 uppercase tracking-widest leading-relaxed text-center md:text-right">
              The HCA Registry is a public, permanent ledger of humanity.<br/>
+             Official Humanity Validation
              © 2026 Human Certification Authority
            </div>
         </div>

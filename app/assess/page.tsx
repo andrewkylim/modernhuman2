@@ -302,7 +302,7 @@ export default function AssessPage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-emerald-600 font-bold">Registry Entry Confirmed</span>
                 </div>
-                <h2 className="text-4xl font-bold text-[#1B2E4B] tracking-tight mb-4">Your Humanity Dossier</h2>
+                <h2 className="text-4xl font-bold text-[#1B2E4B] tracking-tight mb-4">Your Human Status Proof</h2>
                 <p className="text-[#1A1A1A]/40 max-w-lg mx-auto text-sm leading-relaxed font-serif italic">
                   Your biological signatures are now archived in the HCA Global Registry. Use the assets below to prove your origin.
                 </p>
@@ -313,11 +313,11 @@ export default function AssessPage() {
                   <div className="flex-1">
                     <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1B2E4B] font-bold mb-6 pb-2 border-b border-[#1B2E4B]/10">Public sharing protocol</div>
                     <p className="text-[13px] text-[#1A1A1A]/60 leading-relaxed mb-8">
-                      Share your **Official Dossier Link**. This permanent record features a live &apos;Hard Proof&apos; movement replay, definitive evidence of your biological origin.
+                      Share your **Official Record Link**. This permanent record features a live &apos;Hard Proof&apos; movement replay, definitive evidence of your biological origin.
                     </p>
                     <div className="space-y-4">
                        <div className="p-4 bg-[#FAFAF8] border border-[#1A1A1A]/10 flex flex-col gap-2">
-                         <span className="font-mono text-[8px] uppercase tracking-widest text-[#1A1A1A]/40">Permanent Dossier URL</span>
+                         <span className="font-mono text-[8px] uppercase tracking-widest text-[#1A1A1A]/40">Permanent Record URL</span>
                          <div className="flex gap-2">
                            <input 
                              readOnly 
@@ -338,7 +338,7 @@ export default function AssessPage() {
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           <a 
-                            href={`https://twitter.com/intent/tweet?text=I&apos;ve%20been%20verified%20as%20a%20real%20human%20by%20the%20HCA.%20View%20my%20Hard%20Proof%20dossier%20here:&url=https://modernhuman.io/verify?id=${dbId}`}
+                            href={`https://twitter.com/intent/tweet?text=I&apos;ve%20been%20verified%20as%20a%20real%20human%20by%20the%20HCA.%20View%20my%20Hard%20Proof%20record%20here:&url=https://modernhuman.io/verify?id=${dbId}`}
                             target="_blank" rel="noopener noreferrer"
                             className="border border-[#1A1A1A]/10 text-center py-3 text-[9px] uppercase font-bold tracking-widest hover:bg-[#FAFAF8] transition-colors"
                           >Share X</a>

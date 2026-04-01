@@ -114,12 +114,16 @@ function VerifyContent() {
         </div>
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 border border-white/25 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
+            <div className="w-8 h-8 border border-white/25 flex items-center justify-center shrink-0">
+               <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
             </div>
-            <div className="text-sm font-semibold tracking-wide text-white uppercase tracking-widest">
-              Official Humanity Dossier
+            <div className="text-sm font-semibold tracking-wide text-white uppercase tracking-widest overflow-hidden text-ellipsis whitespace-nowrap">
+              modernhuman.io
             </div>
+          </div>
+          
+          <div className="text-[9px] font-mono text-emerald-400 uppercase tracking-[0.4em] font-bold bg-white/5 px-4 py-2 border border-emerald-400/20">
+             Official Humanity Validation
           </div>
           
           <nav className="flex items-center gap-6">

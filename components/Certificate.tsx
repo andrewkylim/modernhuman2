@@ -524,7 +524,7 @@ export default function Certificate({
           </p>
           {dbId && (
             <p style={{ ...mono, fontSize: 8, color: "#1B2E4B", margin: "4px 0", fontWeight: "bold" }}>
-              REGISTERED DOSSIER ID: {dbId}
+              REGISTERED RECORD ID: {dbId}
             </p>
           )}
           <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>
@@ -533,7 +533,7 @@ export default function Certificate({
         </div>
       </div>
     </div>
-
+ 
       {/* ── Digital Assets Kit ────────────────────────────────────────────── */}
       <div style={{ width: "100%", maxWidth: 720, backgroundColor: "#1B2E4B", padding: "40px 30px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4 }}>
         <div style={{ marginBottom: 32 }}>
@@ -541,7 +541,7 @@ export default function Certificate({
             Certified Human Assets
           </h3>
           <h2 style={{ fontSize: 24, fontWeight: "bold", color: "#ffffff", margin: 0, letterSpacing: "-0.01em" }}>
-            Claim your humanity dossier.
+            Claim your human status.
           </h2>
         </div>
 
