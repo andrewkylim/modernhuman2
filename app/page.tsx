@@ -105,32 +105,32 @@ const tiers = [
   {
     name: "Bronze",
     range: "0 – 45",
-    descriptor: "Occasionally Irrational",
-    description: "Documented capacity for poor decisions under mild stress. Basic humanity confirmed.",
+    descriptor: "Fundamental Humanity",
+    description: "Confirmed biological origin with standard cognitive variance. Demonstrates baseline organic responses.",
   },
   {
     name: "Silver",
     range: "46 – 58",
-    descriptor: "Reliably Inconsistent",
-    description: "Contradicts yourself at least once per week. Verified pattern of changing your mind.",
+    descriptor: "Cognitive Variability",
+    description: "Exhibits frequent non-linear decision-making patterns. Distinct from algorithmic logic.",
   },
   {
     name: "Gold",
     range: "59 – 70",
-    descriptor: "Certified Mortal",
-    description: "Full awareness of your own impermanence. Proceeds anyway. Strong indicator of humanity.",
+    descriptor: "High-Index Mortality",
+    description: "Reflects profound awareness of temporal limitations and subsequent value-based prioritization.",
   },
   {
     name: "Platinum",
     range: "71 – 84",
-    descriptor: "Documented Failure History",
-    description: "Rich record of mistakes, recoveries, and subsequent repeated mistakes. Highly human.",
+    descriptor: "Behavioral Resilience",
+    description: "Documented history of multi-stage error cycles and successful organic recovery.",
   },
   {
     name: "Diamond",
     range: "85 – 100",
-    descriptor: "Essentially Chaos",
-    description: "Cannot reliably predict your own behavior 24 hours in advance. Peak certification.",
+    descriptor: "Peak Unpredictability",
+    description: "Demonstrates maximum behavioral deviation from algorithmic predictions. Final HCA tier.",
   },
 ];
 
@@ -313,22 +313,24 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="border border-[#1A1A1A]/10">
-            {tiers.map((tier, i) => (
+          <div className="grid gap-3">
+            {tiers.map((tier) => (
               <div
                 key={tier.name}
-                className={`flex items-start gap-6 px-6 py-5 ${i < tiers.length - 1 ? "border-b border-[#1A1A1A]/8" : ""} hover:bg-[#1B2E4B]/3 transition-colors group`}
+                className="flex items-start gap-8 px-8 py-7 bg-[#1B2E4B] border border-white/5 group relative overflow-hidden"
               >
-                <div className="w-24 shrink-0 pt-0.5">
-                  <div className="text-xs font-semibold tracking-widest uppercase text-[#1B2E4B]/55 group-hover:text-[#1B2E4B] transition-colors mb-1">
+                <div className="w-28 shrink-0 pt-0.5 relative z-10">
+                  <div className="text-xs font-bold tracking-[0.2em] uppercase text-white/50 mb-1.5">
                     {tier.name}
                   </div>
-                  <div className="font-mono text-[9px] text-[#1A1A1A]/25 tracking-wide">{tier.range}</div>
+                  <div className="font-mono text-[10px] text-white/20 tracking-wider font-medium">{tier.range}</div>
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-[#1A1A1A] mb-1">{tier.descriptor}</div>
-                  <div className="text-sm text-[#1A1A1A]/45 leading-relaxed">{tier.description}</div>
+                <div className="flex-1 relative z-10">
+                  <div className="text-base font-semibold text-white mb-2 tracking-wide uppercase">{tier.descriptor}</div>
+                  <div className="text-sm text-white/50 leading-relaxed max-w-xl">{tier.description}</div>
                 </div>
+                {/* Background ornament */}
+                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
           </div>
@@ -344,23 +346,27 @@ export default function Home() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="border-t border-[#1A1A1A]/10 bg-dot-grid py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="max-w-lg">
-            <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#1A1A1A]/35 mb-4">
-              Certification available now
+      <section className="bg-[#1B2E4B] py-28 relative overflow-hidden">
+        {/* Visual interest */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-dot-grid" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10 text-center">
+          <div className="max-w-2xl mx-auto">
+            <div className="font-mono text-[9px] tracking-[0.4em] uppercase text-white/35 mb-6">
+              Official Entry Point / Registry Portal
             </div>
-            <h2 className="text-3xl font-semibold mb-4">Begin your assessment</h2>
-            <p className="text-sm text-[#1A1A1A]/50 mb-8 leading-relaxed">
-              The process takes under five minutes. Results are immediate. Certificates are
-              formatted for professional use and valid for 12 months.
+            <h2 className="text-5xl font-bold mb-6 text-white leading-tight tracking-tight">Begin your assessment</h2>
+            <p className="text-base text-white/45 mb-12 leading-relaxed max-w-lg mx-auto">
+              The process is immediate. Certificates are issued in high-resolution format
+              for professional use and are valid for 12 months from the date of certification.
             </p>
             <Link
               href="/assess/"
-              className="inline-flex items-center gap-3 bg-[#1B2E4B] text-white px-10 py-4 text-sm tracking-wide font-medium hover:bg-[#1B2E4B]/90 transition-colors"
+              className="inline-flex items-center gap-4 bg-white text-[#1B2E4B] px-12 py-5 text-sm tracking-widest uppercase font-bold hover:bg-white/90 transition-colors shadow-2xl"
             >
               Begin Assessment
-              <span className="font-mono text-white/40 text-xs">→</span>
+              <span className="text-base">→</span>
             </Link>
           </div>
         </div>
