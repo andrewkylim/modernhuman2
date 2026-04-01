@@ -9,11 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        cream: "#FAFAF8",
+        ink: "#1A1A1A",
+        navy: "#1B2E4B",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"],
       },
     },
   },
   plugins: [],
 };
+
 export default config;
