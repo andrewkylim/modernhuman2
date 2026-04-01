@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 interface CertificateProps {
   name: string;
+  questionScore: number;
   webcamScore: number;
   drawingScore: number;
   drawingImageUrl: string;
@@ -40,6 +41,7 @@ function formatDate(date: Date): string {
 
 export default function Certificate({
   name,
+  questionScore,
   webcamScore,
   drawingScore,
   drawingImageUrl,
@@ -49,7 +51,7 @@ export default function Certificate({
   const [certNumber] = useState<string>(() => generateCertNumber());
   const [downloading, setDownloading] = useState(false);
 
-  const overallScore = Math.round(webcamScore * 0.4 + drawingScore * 0.6);
+  const overallScore = Math.round(questionScore * 0.35 + webcamScore * 0.25 + drawingScore * 0.4);
   const tier = getTier(overallScore);
 
   const handleDownload = async () => {
@@ -271,6 +273,39 @@ export default function Certificate({
                       paddingBottom: 5,
                     }}
                   >
+                    Questionnaire
+                  </td>
+                  <td
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 11,
+                      paddingBottom: 5,
+                      width: 40,
+                    }}
+                  >
+                    {questionScore}/100
+                  </td>
+                  <td
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 10,
+                      color: "#aaa",
+                      paddingBottom: 5,
+                    }}
+                  >
+                    × 35%
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 11,
+                      color: "#555",
+                      paddingRight: 12,
+                      paddingBottom: 5,
+                    }}
+                  >
                     Biometric Analysis
                   </td>
                   <td
@@ -291,7 +326,7 @@ export default function Certificate({
                       paddingBottom: 5,
                     }}
                   >
-                    × 40%
+                    × 25%
                   </td>
                 </tr>
                 <tr>
@@ -323,7 +358,7 @@ export default function Certificate({
                       paddingBottom: 5,
                     }}
                   >
-                    × 60%
+                    × 40%
                   </td>
                 </tr>
                 <tr style={{ borderTop: "1px solid #e5e5e5" }}>

@@ -171,11 +171,45 @@ export default function WebcamCheck({ onComplete }: Props) {
 
         {/* Camera viewport */}
         <div className="relative bg-[#0a0a0a] aspect-[4/3] overflow-hidden">
+          {/* Loading placeholder — visible while camera initialises */}
+          {(status === 'idle' || status === 'loading') && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-[#0a0a0a]">
+              <div className="relative flex items-center justify-center">
+                {/* Outer pulsing ring */}
+                <div className="absolute w-24 h-24 border border-white/10 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
+                <div className="absolute w-20 h-20 border border-white/15 rounded-full" />
+                {/* Face silhouette */}
+                <svg viewBox="0 0 60 72" className="w-12 h-14 fill-none stroke-white/25" strokeWidth="1.5">
+                  <ellipse cx="30" cy="36" rx="20" ry="26" />
+                  <ellipse cx="21" cy="30" rx="3" ry="3.5" />
+                  <ellipse cx="39" cy="30" rx="3" ry="3.5" />
+                  <path d="M22 46 Q30 52 38 46" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="font-mono text-[9px] tracking-[0.25em] uppercase text-white/30">
+                  {status === 'idle' ? 'Initializing...' : 'Loading biometric module...'}
+                </p>
+                <div className="flex justify-center gap-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-1 h-1 bg-white/25 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.18}s`, animationDuration: '1s' }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <video
             ref={videoRef}
             muted
             playsInline
-            className="w-full h-full object-cover block"
+            className={`w-full h-full object-cover block transition-opacity duration-700 ${
+              status === 'idle' || status === 'loading' ? 'opacity-0' : 'opacity-100'
+            }`}
             style={{ transform: 'scaleX(-1)' }}
           />
 

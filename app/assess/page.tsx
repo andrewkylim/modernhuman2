@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Certificate from "@/components/Certificate";
+import HumanityQuestions from "@/components/HumanityQuestions";
 
 // Dynamically import camera/canvas components to avoid SSR issues
 const WebcamCheck = dynamic(() => import("@/components/WebcamCheck"), { ssr: false });
@@ -22,7 +23,7 @@ function NameEntry({
     <div className="space-y-6">
       <div>
         <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-          Step 1 of 4
+          Step 1 of 5
         </div>
         <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Identity registration</h2>
         <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -53,22 +54,24 @@ function NameEntry({
 // ─── Step config ──────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { id: "name", label: "Identity" },
-  { id: "webcam", label: "Biometric" },
-  { id: "drawing", label: "Drawing" },
-  { id: "results", label: "Certificate" },
+  { id: "name",      label: "Identity"   },
+  { id: "questions", label: "Assessment" },
+  { id: "webcam",    label: "Biometric"  },
+  { id: "drawing",   label: "Drawing"    },
+  { id: "results",   label: "Certificate"},
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
 
-// Steps that auto-advance — no Continue button
-const AUTO_ADVANCE: StepId[] = ["webcam", "drawing"];
+// Steps that auto-advance — no Continue button shown
+const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "questions"];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AssessPage() {
   const [currentStep, setCurrentStep] = useState<StepId>("name");
   const [name, setName] = useState("");
+  const [questionScore, setQuestionScore] = useState(0);
   const [webcamScore, setWebcamScore] = useState(0);
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
@@ -95,19 +98,19 @@ export default function AssessPage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 bg-[#1B2E4B] flex items-center justify-center">
-              <span className="text-white text-xs font-bold tracking-wider">HCA</span>
+              <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
             </div>
             <div>
               <div className="text-sm font-semibold tracking-wide text-[#1B2E4B]">
-                Human Certification Authority
+                modernhuman.io
               </div>
-              <div className="text-[10px] text-[#1A1A1A]/50 tracking-widest uppercase">
-                Assessment Portal
+              <div className="text-[10px] text-[#1A1A1A]/40 tracking-widest uppercase">
+                Human Certification Authority
               </div>
             </div>
           </Link>
 
-          {/* Step progress */}
+          {/* Step progress — desktop */}
           <div className="hidden md:flex items-center gap-1">
             {STEPS.map((step, i) => {
               const isDone = i < currentIndex;
@@ -124,7 +127,9 @@ export default function AssessPage() {
                     }`}
                   >
                     <span
-                      className={`w-1 h-1 rounded-full ${isActive ? "bg-white" : isDone ? "bg-[#1B2E4B]" : "bg-[#1A1A1A]/20"}`}
+                      className={`w-1 h-1 rounded-full ${
+                        isActive ? "bg-white" : isDone ? "bg-[#1B2E4B]" : "bg-[#1A1A1A]/20"
+                      }`}
                     />
                     {step.label}
                   </div>
@@ -158,17 +163,38 @@ export default function AssessPage() {
       <main className="max-w-6xl mx-auto px-6 py-16">
         <div className="max-w-lg">
 
-          {/* Step: Name */}
+          {/* Step 1: Name */}
           {currentStep === "name" && (
             <NameEntry value={name} onChange={setName} />
           )}
 
-          {/* Step: Webcam */}
+          {/* Step 2: Questions */}
+          {currentStep === "questions" && (
+            <div className="space-y-8">
+              <div>
+                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
+                  Step 2 of 5
+                </div>
+                <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity assessment</h2>
+                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
+                  Answer each question honestly. The system detects optimised responses.
+                </p>
+              </div>
+              <HumanityQuestions
+                onComplete={(score) => {
+                  setQuestionScore(score);
+                  goNext();
+                }}
+              />
+            </div>
+          )}
+
+          {/* Step 3: Webcam */}
           {currentStep === "webcam" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 2 of 4
+                  Step 3 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Biometric verification</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -189,12 +215,12 @@ export default function AssessPage() {
             </div>
           )}
 
-          {/* Step: Drawing */}
+          {/* Step 4: Drawing */}
           {currentStep === "drawing" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 3 of 4
+                  Step 4 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity drawing sample</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -212,12 +238,12 @@ export default function AssessPage() {
             </div>
           )}
 
-          {/* Step: Results */}
+          {/* Step 5: Results */}
           {currentStep === "results" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 4 of 4
+                  Step 5 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Assessment complete</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -226,6 +252,7 @@ export default function AssessPage() {
               </div>
               <Certificate
                 name={name.trim() || "Anonymous Human"}
+                questionScore={questionScore}
                 webcamScore={webcamScore}
                 drawingScore={drawingScore}
                 drawingImageUrl={drawingImageUrl}
