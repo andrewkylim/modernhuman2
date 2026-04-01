@@ -220,7 +220,7 @@ export default function Home() {
                 <span className="block font-mono text-sm tracking-[0.25em] uppercase text-white/40 mb-4">
                   Are you still
                 </span>
-                <span className="block text-[80px] md:text-[96px] font-bold tracking-tight text-white leading-[0.92]">
+                <span className="block text-[56px] sm:text-[80px] md:text-[96px] font-bold tracking-tight text-white leading-[0.92]">
                   HUMAN?
                 </span>
               </h1>
@@ -251,14 +251,14 @@ export default function Home() {
 
       {/* ── Stat bar ─────────────────────────────────────────────────────────── */}
       <div className="border-b border-[#1A1A1A]/8 bg-[#FAFAF8]">
-        <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 divide-x divide-[#1A1A1A]/8">
+        <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 divide-y xs:divide-y-0 xs:divide-x divide-[#1A1A1A]/8">
           {[
             { value: "47,284", label: "Certified humans",    ref: "A" },
             { value: "99.1%",  label: "Detection rate",      ref: "B" },
             { value: "Rev. 14.2", label: "Active standard",  ref: "C" },
             { value: "5 tiers",  label: "Classification levels", ref: "D" },
           ].map((stat) => (
-            <div key={stat.label} className="px-6 first:pl-0 last:pr-0 py-1">
+            <div key={stat.label} className="px-6 xs:first:pl-0 xs:last:pr-0 py-4 xs:py-1">
               <div className="flex items-start justify-between mb-1">
                 <div className="text-xl font-semibold text-[#1B2E4B] tracking-tight">{stat.value}</div>
                 <div className="font-mono text-[8px] text-[#1A1A1A]/20 tracking-widest mt-1">{stat.ref}</div>

@@ -310,10 +310,15 @@ export default function Certificate({
   const mono: React.CSSProperties = { fontFamily: "monospace" };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%", paddingBottom: 60 }}>
 
-      {/* ── Certificate document ────────────────────────────────────────────── */}
-      <div ref={certRef} style={certStyle}>
+      {/* ── Certificate document (with mobile scale-to-fit) ────────────────── */}
+      <div className="w-full flex justify-center overflow-hidden py-4">
+        <div 
+          ref={certRef} 
+          style={certStyle}
+          className="origin-top sm:scale-100 scale-[0.65] xs:scale-[0.8] mb-[-120px] xs:mb-[-60px] sm:mb-0"
+        >
 
         {/* Corner ornaments */}
         {(["tl","tr","bl","br"] as const).map((pos) => (
@@ -396,9 +401,7 @@ export default function Certificate({
         </div>
 
         {/* Domain breakdown */}
-        <div style={{ display: "flex", gap: 20, alignItems: "flex-start",
-          borderTop: "1px solid #e0ddd5", borderBottom: "1px solid #e0ddd5",
-          padding: "16px 0", marginBottom: 18 }}>
+        <div className="flex flex-col md:flex-row gap-5 md:gap-10 items-center md:items-start border-t border-[#e0ddd5] border-b border-[#e0ddd5] py-4 mb-4">
 
           {/* Radar */}
           <RadarChart domains={domains} />
@@ -476,8 +479,7 @@ export default function Certificate({
         </div>
 
         {/* Drawing thumbnail + signatures */}
-        <div style={{ display: "flex", justifyContent: "space-between",
-          alignItems: "flex-end", marginBottom: 20 }}>
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 sm:gap-0 mb-5">
 
           {drawingImageUrl && (
             <div style={{ textAlign: "center" }}>
@@ -492,13 +494,13 @@ export default function Certificate({
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 40, marginLeft: "auto" }}>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-10 items-center sm:items-end">
             {[
               { sig: "A. Turing", name: "Dr. A. Turing", title: "Chief Humanity Officer" },
               { sig: "The Board", name: "The Board of", title: "Human Standards" },
             ].map(({ sig, name: sn, title }) => (
               <div key={sn} style={{ textAlign: "center" }}>
-                <div style={{ borderBottom: "1px solid #555", width: 140,
+                <div style={{ borderBottom: "1px solid #555", width: 120,
                   paddingBottom: 2, marginBottom: 3 }}>
                   <p style={{ fontFamily: "'Brush Script MT', cursive, Georgia, serif",
                     fontSize: 20, color: "#1a2744", margin: 0, fontStyle: "italic",
@@ -506,8 +508,8 @@ export default function Certificate({
                     {sig}
                   </p>
                 </div>
-                <p style={{ ...mono, fontSize: 9, color: "#666", margin: 0 }}>{sn}</p>
-                <p style={{ ...mono, fontSize: 9, color: "#666", margin: 0 }}>{title}</p>
+                <p style={{ ...mono, fontSize: 8, color: "#666", margin: 0 }}>{sn}</p>
+                <p style={{ ...mono, fontSize: 8, color: "#666", margin: 0 }}>{title}</p>
               </div>
             ))}
           </div>
@@ -524,6 +526,7 @@ export default function Certificate({
           </p>
         </div>
       </div>
+    </div>
 
       {/* ── Digital Assets Kit ────────────────────────────────────────────── */}
       <div style={{ width: "100%", maxWidth: 720, backgroundColor: "#1B2E4B", padding: "40px 30px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4 }}>
@@ -536,7 +539,7 @@ export default function Certificate({
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* LinkedIn Frame Preview */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -595,33 +598,25 @@ export default function Certificate({
       </div>
 
       {/* ── Domain analysis cards ────────────────────────────────────────────── */}
-      <div style={{ width: "100%", maxWidth: 720 }}>
-        <p style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.2em",
-          textTransform: "uppercase", color: "#1A1A1A", opacity: 0.4, marginBottom: 12 }}>
+      <div className="w-full max-w-[720px] px-6 md:px-0">
+        <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1A1A1A]/40 mb-3">
           Domain Analysis
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {DOMAIN_ORDER.map((key) => {
             const d = domains[key];
             if (!d) return null;
             return (
-              <div key={key} style={{ border: "1px solid rgba(26,26,26,0.1)",
-                padding: "12px 14px", backgroundColor: "#FAFAF8" }}>
-                <div style={{ display: "flex", justifyContent: "space-between",
-                  alignItems: "baseline", marginBottom: 6 }}>
-                  <span style={{ fontFamily: "monospace", fontSize: 9,
-                    textTransform: "uppercase", letterSpacing: "0.15em",
-                    color: "#1B2E4B", fontWeight: "bold" }}>
+              <div key={key} className="border border-[#1A1A1A]/10 p-3 md:p-4 bg-[#FAFAF8]">
+                <div className="flex justify-between items-baseline mb-1.5">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-[#1B2E4B] font-bold">
                     {d.label}
                   </span>
-                  <span style={{ fontFamily: "monospace", fontSize: 11,
-                    color: "#1A1A1A", opacity: 0.6 }}>
+                  <span className="font-mono text-[11px] text-[#1A1A1A]/60">
                     {d.score}/100
                   </span>
                 </div>
-                <p style={{ fontFamily: "Georgia, serif", fontSize: 12,
-                  color: "#1A1A1A", opacity: 0.65, lineHeight: 1.6,
-                  margin: 0, fontStyle: "italic" }}>
+                <p className="font-serif text-[12px] text-[#1A1A1A]/65 leading-relaxed italic">
                   {d.analysis}
                 </p>
               </div>

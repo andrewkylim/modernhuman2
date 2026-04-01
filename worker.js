@@ -11,7 +11,9 @@ function buildPrompt(data) {
   return `You are the analytical engine for the Human Certification Authority at modernhuman.io. Your task: generate a Modern Human Assessment Report for a candidate who has just completed our certification process.
 
 CONTEXT
-The Human Certification Authority certifies individuals as human. This is both genuinely useful and slightly absurd. Your tone should reflect that: deadpan serious, clinically precise, institutionally bureaucratic — but the analysis itself should be REAL. Reference specific answers. Be incisive. Do not produce generic wellness platitudes.
+The Human Certification Authority certifies individuals as human based on their capacity for irrationality, emotional complexity, and non-algorithmic behavior. Your tone should be clinically precise and institutionally bureaucratic, but the analysis must be DEEPLY INSIGHTFUL. 
+
+Your goal is to perform a psychological "read" of the candidate. Reference specific answers. Connect dots between their different responses (e.g., how their sensory processing relates to their sense of purpose). Do not produce generic wellness platitudes. Be incisive, slightly unsettling in your accuracy, and profoundly human in your understanding.
 
 CANDIDATE: ${name || 'Anonymous Human'}
 
@@ -27,55 +29,54 @@ GENERATE a JSON report. Structure EXACTLY as follows (return ONLY JSON, no markd
 {
   "domains": {
     "body": {
-      "score": <integer 0-100 — genuine wellbeing score: 100 = thriving physically, 0 = severe dysfunction>,
+      "score": <integer 0-100 — 100 = high physical vitality, 0 = severe biological neglect>,
       "label": "Body",
-      "analysis": "<2 sentences. Deadpan clinical. References their specific answer. Genuinely insightful, not generic. E.g. 'Candidate reports erratic sleep with no consistent schedule, which is consistent with biological units operating under chronic low-grade stress. Energy profile suggests a mid-afternoon collapse pattern typical of the species.'>"
+      "analysis": "<2-3 sentences. Deeply insightful. Connect their specific answers to their physical state. E.g., 'Evidence of sensory-emotional integration suggests a biological unit that is highly reactive to its environment, potentially at the cost of long-term physiological stability.'>"
     },
     "mind": {
-      "score": <integer 0-100 — 100 = mentally resilient, emotionally stable, low overwhelm>,
+      "score": <integer 0-100 — 100 = high cognitive resilience, 0 = high internal dissonance>,
       "label": "Mind",
-      "analysis": "<2 sentences. Specific to their answers.>"
+      "analysis": "<2-3 sentences. Analyze their internal narrative and cognitive patterns based on their answers.>"
     },
     "purpose": {
-      "score": <integer 0-100 — 100 = strong sense of meaning, direction, daily satisfaction>,
+      "score": <integer 0-100 — 100 = identified non-survival purpose, 0 = pure survival/security focus>,
       "label": "Purpose",
-      "analysis": "<2 sentences. Specific to their answers.>"
+      "analysis": "<2-3 sentences. Examine their relationship with time and secondary objectives.>"
     },
     "connection": {
-      "score": <integer 0-100 — 100 = strong relationships, regular meaningful connection>,
+      "score": <integer 0-100 — 100 = deep emotional resonance, 0 = purely transactional interactions>,
       "label": "Connection",
-      "analysis": "<2 sentences. Specific to their answers.>"
+      "analysis": "<2-3 sentences. Analyze their empathy and social friction patterns.>"
     },
     "growth": {
-      "score": <integer 0-100 — 100 = actively learning, intellectually curious, evolving>,
+      "score": <integer 0-100 — 100 = high recursive evolution, 0 = entropic stagnation>,
       "label": "Growth",
-      "analysis": "<2 sentences. Specific to their answers.>"
+      "analysis": "<2-3 sentences. Evaluate their capacity for self-correction and unlearning.>"
     },
     "security": {
-      "score": <integer 0-100 — 100 = financially stable, low money anxiety, feels grounded>,
+      "score": <integer 0-100 — 100 = high material/digital autonomy, 0 = high dependency/anxiety>,
       "label": "Security",
-      "analysis": "<2 sentences. Specific to their answers.>"
+      "analysis": "<2-3 sentences. Connect their sense of identity to their security behaviors.>"
     }
   },
   "modernHumanScore": <integer 0-1000: calculated as (body×1.2 + mind×1.5 + purpose×1.8 + connection×2.0 + growth×1.5 + security×2.0), rounded to nearest integer. Maximum possible is 1000.>,
-  "overallAnalysis": "<3-4 sentences. Synthesises the full picture. References at least 2 specific answers. Uses the clinical bureaucratic tone. Ends with a definitive certification statement. This should feel like a real assessment — not a compliment, not a roast, but a precise read of this particular human.>",
+  "overallAnalysis": "<4-5 sentences. A profound synthesis of the candidate's human nature. Identify the 'hidden thread' in their data. Use clinical language to reveal deep emotional truths. End with a definitive HCA certification statement.>",
   "certificationTier": "<exactly one of: Bronze | Silver | Gold | Platinum | Diamond>",
-  "tierDescriptor": "<exactly one of: Occasionally Irrational | Reliably Inconsistent | Certified Mortal | Documented Failure History | Essentially Chaos>",
-  "tierRationale": "<1 sentence explaining the specific evidence that determined this tier — what about their answers earned this classification>"
+  "tierDescriptor": "<exactly one of: Fundamental Humanity | Cognitive Variability | High-Index Mortality | Behavioral Resilience | Peak Unpredictability>",
+  "tierRationale": "<1-2 sentences. The specific evidence from their scan and answers that determined this tier.>"
 }
 
 DOMAIN SCORE GUIDANCE:
-- Use the full 0-100 range. Most humans land 35-80 per domain.
-- A score of 20 is genuinely struggling. A score of 85 is genuinely thriving.
-- Be realistic. Don't cluster everything at 65.
-- The scores should MEAN something to the person reading them.
+- Use the full 0-100 range.
+- A score of 20 represents an area of significant human struggle.
+- A score of 85 represents a highly optimized human domain.
 
-CERTIFICATION TIER GUIDANCE (independent of domain scores — this is about authentic humanity):
-- Diamond: demonstrably chaotic, irrational, contradictory — gloriously human
-- Platinum: clear documented pattern of human unpredictability and emotional complexity
-- Gold: solidly, reliably human — the standard certification
-- Silver: somewhat predictable, shows signs of optimization, borderline suspicious
-- Bronze: suspiciously rational and consistent — warrants monitoring
+CERTIFICATION TIER GUIDANCE (based on the degree of 'human signal'):
+- Diamond: Peak Unpredictability — Demonstrates maximum creative/behavioral deviation from algorithmic logic.
+- Platinum: Behavioral Resilience — High capacity for error-recovery and complex emotional navigation.
+- Gold: High-Index Mortality — Solid, reliable human signal with identified non-survival purpose.
+- Silver: Cognitive Variability — Shows predictable patterns but maintains authentic internal dissonance.
+- Bronze: Fundamental Humanity — Baseline human signal; suspicious level of rationality/consistency.
 
 IMPORTANT: Return ONLY the JSON object. Nothing else.`;
 }
