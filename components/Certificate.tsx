@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export interface DomainResult {
   score: number;
@@ -109,6 +109,31 @@ const TIER_COLORS: Record<string, string> = {
   Diamond:  "#1a2744",
 };
 
+function ProfileFramePreview({ webcamImageUrl, certificationTier, renderFn }: { 
+  webcamImageUrl?: string; 
+  certificationTier: string;
+  renderFn: (canvas: HTMLCanvasElement) => Promise<void>;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.width = 400;
+      canvasRef.current.height = 400;
+      renderFn(canvasRef.current);
+    }
+  }, [webcamImageUrl, certificationTier, renderFn]);
+
+  return (
+    <div style={{ position: "relative", width: 180, height: 180, borderRadius: "50%", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+      <canvas 
+        ref={canvasRef} 
+        style={{ width: "100%", height: "100%", display: "block" }}
+      />
+    </div>
+  );
+}
+
 // ─── Certificate ─────────────────────────────────────────────────────────────
 
 function generateCertNumber(): string {
@@ -135,7 +160,6 @@ export default function Certificate({
   const [certNumber] = useState(generateCertNumber);
   const [downloading, setDownloading] = useState(false);
   const [downloadingFrame, setDownloadingFrame] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const { domains, modernHumanScore, overallAnalysis, certificationTier,
     tierDescriptor, tierRationale } = aiReport;
@@ -162,92 +186,101 @@ export default function Certificate({
     }
   }
 
+  async function renderProfileFrame(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext("2d")!;
+    const size = canvas.width;
+    const center = size / 2;
+    const ringRadius = size * 0.4575; // 183/400 ratio
+    const faceRadius = size * 0.405;   // 162/400 ratio
+    const ringWidth = size * 0.085;    // 34/400 ratio
+
+    // Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+
+    // Clip circle for face
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center, center, faceRadius, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (webcamImageUrl) {
+      await new Promise<void>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const s = Math.min(img.width, img.height);
+          const sx = (img.width - s) / 2;
+          const sy = (img.height - s) / 2;
+          ctx.drawImage(img, sx, sy, s, s, center - faceRadius, center - faceRadius, faceRadius * 2, faceRadius * 2);
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = webcamImageUrl!;
+      });
+    } else {
+      ctx.fillStyle = "#1B2E4B";
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `bold ${Math.round(size * 0.035)}px monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("NO FACE CAPTURED", center, center);
+    }
+
+    ctx.restore();
+
+    // Ring
+    ctx.beginPath();
+    ctx.arc(center, center, ringRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = "#1B2E4B";
+    ctx.lineWidth = ringWidth;
+    ctx.stroke();
+
+    // Curved text around ring
+    const text = "HUMAN CERTIFIED · MODERNHUMAN.IO";
+    const anglePerChar = (Math.PI * 2) / text.length;
+    const startAngle = -Math.PI / 2;
+    ctx.font = `bold ${Math.round(size * 0.0275)}px monospace`;
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (let i = 0; i < text.length; i++) {
+      const angle = startAngle + i * anglePerChar;
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(angle);
+      ctx.translate(0, -ringRadius);
+      ctx.fillText(text[i], 0, 0);
+      ctx.restore();
+    }
+
+    // Badge pill at bottom
+    const badgeText = certificationTier.toUpperCase();
+    const badgeAngle = Math.PI / 2;
+    const badgeCx = center + ringRadius * Math.cos(badgeAngle);
+    const badgeCy = center + ringRadius * Math.sin(badgeAngle);
+    const badgeW = size * 0.18;
+    const badgeH = size * 0.045;
+    ctx.fillStyle = "#1B2E4B";
+    ctx.beginPath();
+    ctx.roundRect(badgeCx - badgeW / 2, badgeCy - badgeH / 2, badgeW, badgeH, Math.round(size * 0.0225));
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${Math.round(size * 0.025)}px monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(badgeText, badgeCx, badgeCy);
+  }
+
   async function handleDownloadProfileFrame() {
     if (downloadingFrame) return;
     setDownloadingFrame(true);
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 400;
-      canvas.height = 400;
-      const ctx = canvas.getContext("2d")!;
-
-      // Background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 400, 400);
-
-      // Clip circle for face
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(200, 200, 162, 0, Math.PI * 2);
-      ctx.clip();
-
-      if (webcamImageUrl) {
-        await new Promise<void>((resolve) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => {
-            const size = Math.min(img.width, img.height);
-            const sx = (img.width - size) / 2;
-            const sy = (img.height - size) / 2;
-            ctx.drawImage(img, sx, sy, size, size, 200 - 162, 200 - 162, 324, 324);
-            resolve();
-          };
-          img.onerror = () => resolve();
-          img.src = webcamImageUrl!;
-        });
-      } else {
-        ctx.fillStyle = "#1B2E4B";
-        ctx.fillRect(0, 0, 400, 400);
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 14px monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("NO FACE CAPTURED", 200, 200);
-      }
-
-      ctx.restore();
-
-      // Ring
-      ctx.beginPath();
-      ctx.arc(200, 200, 183, 0, Math.PI * 2);
-      ctx.strokeStyle = "#1B2E4B";
-      ctx.lineWidth = 34;
-      ctx.stroke();
-
-      // Curved text around ring
-      const text = "HUMAN CERTIFIED · MODERNHUMAN.IO";
-      const anglePerChar = (Math.PI * 2) / text.length;
-      const startAngle = -Math.PI / 2;
-      ctx.font = "bold 11px monospace";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      for (let i = 0; i < text.length; i++) {
-        const angle = startAngle + i * anglePerChar;
-        ctx.save();
-        ctx.translate(200, 200);
-        ctx.rotate(angle);
-        ctx.translate(0, -183);
-        ctx.fillText(text[i], 0, 0);
-        ctx.restore();
-      }
-
-      // Badge pill at bottom (~270deg = bottom of ring)
-      const badgeText = certificationTier.toUpperCase();
-      const badgeAngle = Math.PI / 2; // 90deg = bottom
-      const badgeCx = 200 + 183 * Math.cos(badgeAngle);
-      const badgeCy = 200 + 183 * Math.sin(badgeAngle);
-      const badgeW = 72;
-      const badgeH = 18;
-      ctx.fillStyle = "#1B2E4B";
-      ctx.beginPath();
-      ctx.roundRect(badgeCx - badgeW / 2, badgeCy - badgeH / 2, badgeW, badgeH, 9);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 10px monospace";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(badgeText, badgeCx, badgeCy);
+      canvas.width = 800;
+      canvas.height = 800;
+      await renderProfileFrame(canvas);
 
       const link = document.createElement("a");
       link.download = `profile-frame-${certNumber}.png`;
@@ -258,19 +291,9 @@ export default function Certificate({
     }
   }
 
-  function handleShareX() {
-    const tweet = `Just got certified human. ${certificationTier} tier. Modern Human Score: ${modernHumanScore}/1000. modernhuman.io/assess`;
-    window.open(
-      "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweet),
-      "_blank"
-    );
-  }
-
-  async function handleCopyLink() {
-    await navigator.clipboard.writeText("https://modernhuman.io/assess");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
+  // Not used anymore as sharing buttons are removed
+  // function handleShareX() { ... }
+  // async function handleCopyLink() { ... }
 
   const certStyle: React.CSSProperties = {
     backgroundColor: "#FFFDF5",
@@ -502,7 +525,76 @@ export default function Certificate({
         </div>
       </div>
 
-      {/* ── Domain analysis cards (outside the certificate) ─────────────────── */}
+      {/* ── Digital Assets Kit ────────────────────────────────────────────── */}
+      <div style={{ width: "100%", maxWidth: 720, backgroundColor: "#1B2E4B", padding: "40px 30px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4 }}>
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.25em", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", margin: "0 0 10px" }}>
+            Certified Human Assets
+          </h3>
+          <h2 style={{ fontSize: 24, fontWeight: "bold", color: "#ffffff", margin: 0, letterSpacing: "-0.01em" }}>
+            Your digital identity kit.
+          </h2>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+          {/* LinkedIn Frame Preview */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)" }}>
+               <ProfileFramePreview 
+                 webcamImageUrl={webcamImageUrl} 
+                 certificationTier={certificationTier} 
+                 renderFn={renderProfileFrame}
+               />
+            </div>
+            <div>
+              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>LinkedIn Profile Frame</h4>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
+                A circular overlay featuring your biometric scan and HCA certification tier. Use this as your profile picture to signal verified origin.
+              </p>
+              <button
+                onClick={handleDownloadProfileFrame}
+                disabled={downloadingFrame}
+                className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
+              >
+                {downloadingFrame ? "Creating..." : "Download Profile Frame"}
+              </button>
+            </div>
+          </div>
+
+          {/* Certificate Thumbnail */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }} onClick={handleDownload}>
+              <div style={{ width: 110, height: 140, backgroundColor: "#FFFDF5", border: "1px solid rgba(255,255,255,0.2)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", padding: 8, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}>
+                <div style={{ width: "100%", height: 1.5, background: "#1B2E4B", marginBottom: 3 }} />
+                <div style={{ fontSize: 3.5, fontWeight: "bold", color: "#1B2E4B", textAlign: "center", marginBottom: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>MODERNHUMAN.IO</div>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                   <div style={{ fontSize: 12, fontWeight: "bold", color: "#1B2E4B", textAlign: "center" }}>
+                    <div style={{ fontSize: 4, fontWeight: "normal", opacity: 0.5 }}>SCORE</div>
+                    {modernHumanScore}
+                  </div>
+                </div>
+                <div style={{ fontSize: 3, color: "#1B2E4B", textAlign: "center", padding: "2px 4px", borderTop: "0.5px solid #1B2E4B", width: "100%", textTransform: "uppercase" }}>Certificate of Humanity</div>
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(255,255,255,0.1), transparent)" }} />
+              </div>
+            </div>
+            <div>
+              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Full Humanity Certificate</h4>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
+                Your official certification document in print-ready high resolution. Includes your domain breakdown and tier rationale.
+              </p>
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
+              >
+                {downloading ? "Generating..." : "Download Certificate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Domain analysis cards ────────────────────────────────────────────── */}
       <div style={{ width: "100%", maxWidth: 720 }}>
         <p style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.2em",
           textTransform: "uppercase", color: "#1A1A1A", opacity: 0.4, marginBottom: 12 }}>
@@ -536,39 +628,6 @@ export default function Certificate({
             );
           })}
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-wrap justify-center gap-4">
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {downloading ? "Generating..." : "Download Certificate"}
-        </button>
-
-        <button
-          onClick={handleDownloadProfileFrame}
-          disabled={downloadingFrame}
-          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {downloadingFrame ? "Creating..." : "Download Profile Frame"}
-        </button>
-
-        <button
-          onClick={handleShareX}
-          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors"
-        >
-          Share on X
-        </button>
-
-        <button
-          onClick={handleCopyLink}
-          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors min-w-[140px]"
-        >
-          {copied ? "Copied!" : "Copy link"}
-        </button>
       </div>
     </div>
   );
