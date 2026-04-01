@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import Certificate, { AIReport } from "@/components/Certificate";
+import { useRouter } from "next/navigation";
+import { AIReport } from "@/components/Certificate";
 import HumanityQuestions, { FormattedAnswer } from "@/components/HumanityQuestions";
 import { supabase } from "@/lib/supabase";
 
@@ -29,7 +30,6 @@ const STEPS = [
   { id: "drawing",      label: "Motor Diagnostic"    },
   { id: "verification", label: "Verification Synthesis" },
   { id: "questions",    label: "Cognitive Profile" },
-  { id: "results",      label: "Official Record"},
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -40,6 +40,7 @@ const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "verification"];
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AssessPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<StepId>("name");
   const [name, setName] = useState("");
   const [webcamScore, setWebcamScore] = useState(0);
@@ -47,8 +48,6 @@ export default function AssessPage() {
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
   const [drawingStrokes, setDrawingStrokes] = useState<Stroke[]>([]); 
-  const [aiReport, setAiReport] = useState<AIReport | null>(null);
-  const [dbId, setDbId] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
@@ -64,7 +63,7 @@ export default function AssessPage() {
     if (!isFirst) setCurrentStep(STEPS[currentIndex - 1].id);
   }
 
-  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep) && currentStep !== "results" && currentStep !== "questions";
+  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep) && currentStep !== "questions";
   const canAdvance = currentStep !== "name" || name.trim().length > 0;
 
   async function analyzeAssessment(answers: FormattedAnswer[], ws: number, ds: number) {
@@ -105,7 +104,7 @@ export default function AssessPage() {
       {/* Main Header */}
       <header className="border-b border-[#1A1A1A]/10 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group" >
             <div className="w-8 h-8 bg-[#1B2E4B] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
             </div>
@@ -114,10 +113,6 @@ export default function AssessPage() {
                 modernhuman.io
               </div>
             </div>
-          </Link>
-
-          <Link href="/registry" className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#1B2E4B]/40 hover:text-[#1B2E4B] transition-colors md:hidden">
-            Registry
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
@@ -159,7 +154,7 @@ export default function AssessPage() {
                 <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-[#1A1A1A]/30 mb-2">Protocol Initialization</p>
                 <h2 className="text-3xl font-bold text-[#1B2E4B] mb-4">Subject Identity declaration</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed font-serif italic max-w-md mx-auto">
-                  Provide the designation that will be cryptographically bound to your movement diagnostic and biometric scan.
+                  Provide the designation that will be cryptographically bound to your biometrical status and movement diagnostic.
                 </p>
               </div>
               <div className="max-w-md mx-auto space-y-4">
@@ -266,8 +261,6 @@ export default function AssessPage() {
                   setAnalyzing(true);
                   try {
                     const result = await analyzeAssessment(answers, webcamScore, drawingScore);
-                    setAiReport(result);
-                    
                     const { data, error } = await supabase
                       .from("assessments")
                       .insert({
@@ -283,98 +276,15 @@ export default function AssessPage() {
                       .single();
                     
                     if (error) throw error;
-                    if (data) setDbId(data.id);
-                    setCurrentStep("results");
+                    if (data) {
+                      router.replace(`/verify/${data.id}`);
+                    }
                   } catch (err: unknown) {
                     setAnalyzeError(err instanceof Error ? err.message : "Registry process failure.");
                   } finally {
                     setAnalyzing(false);
                   }
                 }}
-              />
-            </div>
-          )}
-
-          {currentStep === "results" && aiReport && (
-            <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-4">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-emerald-600 font-bold">Registry Entry Confirmed</span>
-                </div>
-                <h2 className="text-4xl font-bold text-[#1B2E4B] tracking-tight mb-4">Your Human Status Proof</h2>
-                <p className="text-[#1A1A1A]/40 max-w-lg mx-auto text-sm leading-relaxed font-serif italic">
-                  Your biological signatures are now archived in the HCA Global Registry. Use the assets below to prove your origin.
-                </p>
-              </div>
-
-              <div className="w-full bg-white border border-[#1A1A1A]/10 shadow-2xl p-8 mb-12 relative overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-12">
-                  <div className="flex-1">
-                    <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1B2E4B] font-bold mb-6 pb-2 border-b border-[#1B2E4B]/10">Public sharing protocol</div>
-                    <p className="text-[13px] text-[#1A1A1A]/60 leading-relaxed mb-8">
-                      Share your **Official Record Link**. This permanent record features a live &apos;Hard Proof&apos; movement replay, definitive evidence of your biological origin.
-                    </p>
-                    <div className="space-y-4">
-                       <div className="p-4 bg-[#FAFAF8] border border-[#1A1A1A]/10 flex flex-col gap-2">
-                         <span className="font-mono text-[8px] uppercase tracking-widest text-[#1A1A1A]/40">Permanent Record URL</span>
-                         <div className="flex gap-2">
-                           <input 
-                             readOnly 
-                             value={dbId ? `https://modernhuman.io/verify?id=${dbId}` : "REGISTERING..."} 
-                             className="flex-1 bg-white border border-[#1A1A1A]/10 px-3 py-2 text-xs font-mono text-[#1B2E4B]"
-                           />
-                           <button 
-                             onClick={() => {
-                               if (!dbId) return;
-                               navigator.clipboard.writeText(`https://modernhuman.io/verify?id=${dbId}`);
-                               alert("Verification URL copied to registry clipboard.");
-                             }}
-                             className="bg-[#1B2E4B] text-white px-4 py-2 text-[10px] uppercase font-bold tracking-widest hover:bg-[#1B2E4B]/90 transition-colors"
-                           >
-                             Copy
-                           </button>
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                          <a 
-                            href={`https://twitter.com/intent/tweet?text=I&apos;ve%20been%20verified%20as%20a%20real%20human%20by%20the%20HCA.%20View%20my%20Hard%20Proof%20record%20here:&url=https://modernhuman.io/verify?id=${dbId}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="border border-[#1A1A1A]/10 text-center py-3 text-[9px] uppercase font-bold tracking-widest hover:bg-[#FAFAF8] transition-colors"
-                          >Share X</a>
-                          <a 
-                            href={`https://www.linkedin.com/sharing/share-offsite/?url=https://modernhuman.io/verify?id=${dbId}`}
-                            target="_blank" rel="noopener noreferrer"
-                            className="border border-[#1A1A1A]/10 text-center py-3 text-[9px] uppercase font-bold tracking-widest hover:bg-[#FAFAF8] transition-colors"
-                          >LinkedIn</a>
-                       </div>
-                    </div>
-                  </div>
-                  <div className="w-full md:w-[240px] shrink-0 border-l border-[#1A1A1A]/5 pl-0 md:pl-12">
-                    <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1A1A1A]/30 mb-4">Record status</div>
-                    <div className="text-4xl font-bold text-[#1B2E4B] mb-2">{aiReport.modernHumanScore}</div>
-                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B]/40 mb-8">Humanity Index</div>
-                    <div className="space-y-4">
-                      {["Biometric Scan", "Movement Diagnostic", "Cognitive Analysis"].map(m => (
-                        <div key={m} className="flex justify-between items-center text-[10px] font-mono">
-                          <span className="text-[#1A1A1A]/40 uppercase tracking-widest">{m}</span>
-                          <span className="text-emerald-600 font-bold">VERIFIED</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Certificate
-                name={name}
-                webcamScore={webcamScore}
-                drawingScore={drawingScore}
-                drawingImageUrl={drawingImageUrl}
-                issuedAt={new Date()}
-                aiReport={aiReport}
-                webcamImageUrl={webcamImageUrl}
-                dbId={dbId || undefined}
               />
             </div>
           )}
@@ -419,7 +329,7 @@ export default function AssessPage() {
           )}
 
           {/* Bottom Nav */}
-          {!analyzing && currentStep !== "results" && (
+          {!analyzing && (
             <div className="mt-16 pt-8 border-t border-[#1A1A1A]/10 flex justify-between items-center">
               <button 
                 onClick={goPrev}

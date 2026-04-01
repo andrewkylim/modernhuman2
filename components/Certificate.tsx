@@ -62,16 +62,15 @@ function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
       x: cx + lr * Math.cos(a),
       y: cy + lr * Math.sin(a),
       label: domains[key]?.label ?? key,
-      score: domains[key]?.score ?? 0,
     };
   });
 
   return (
-    <svg viewBox="0 0 220 220" style={{ width: 180, height: 180, flexShrink: 0 }}>
+    <svg viewBox="0 0 220 220" style={{ width: 140, height: 140, flexShrink: 0 }}>
       {/* Grid */}
       {gridPolygons.map(({ pts, factor }) => (
-        <polygon key={factor} points={pts} fill="none" stroke="#1a2744"
-          strokeWidth="0.5" opacity={0.08 + factor * 0.1} />
+        <polygon key={factor} points={pts} fill="none" stroke="#1B2E4B"
+          strokeWidth="0.5" opacity={0.1 + factor * 0.05} />
       ))}
       {/* Spokes */}
       {ORDER.map((_, i) => {
@@ -79,20 +78,20 @@ function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
         return (
           <line key={i} x1={cx} y1={cy}
             x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)}
-            stroke="#1a2744" strokeWidth="0.5" opacity="0.15" />
+            stroke="#1B2E4B" strokeWidth="0.5" opacity="0.1" />
         );
       })}
       {/* Score fill */}
-      <polygon points={scorePath} fill="#1a2744" fillOpacity="0.1"
-        stroke="#1a2744" strokeWidth="1.5" />
+      <polygon points={scorePath} fill="#1B2E4B" fillOpacity="0.1"
+        stroke="#1B2E4B" strokeWidth="1" />
       {/* Dots */}
       {scorePoints.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#1a2744" opacity="0.6" />
+        <circle key={i} cx={p.x} cy={p.y} r="2" fill="#1B2E4B" opacity="0.4" />
       ))}
       {/* Labels */}
       {labels.map((l, i) => (
         <text key={i} x={l.x} y={l.y} textAnchor="middle" dominantBaseline="middle"
-          fontFamily="monospace" fontSize="7.5" fill="#1a2744" opacity="0.55">
+          fontFamily="monospace" fontSize="6.5" fill="#1B2E4B" opacity="0.4" style={{ fontWeight: "bold", textTransform: "uppercase" }}>
           {l.label}
         </text>
       ))}
@@ -100,15 +99,7 @@ function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
   );
 }
 
-// ─── Tier badge ───────────────────────────────────────────────────────────────
-
-const TIER_COLORS: Record<string, string> = {
-  Bronze:   "#92400e",
-  Silver:   "#374151",
-  Gold:     "#B45309",
-  Platinum: "#1E293B",
-  Diamond:  "#111827",
-};
+// ─── Profile Frame Preview ───────────────────────────────────────────────────
 
 function ProfileFramePreview({ webcamImageUrl, certificationTier, renderFn }: { 
   webcamImageUrl?: string; 
@@ -119,17 +110,18 @@ function ProfileFramePreview({ webcamImageUrl, certificationTier, renderFn }: {
 
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.width = 400;
-      canvasRef.current.height = 400;
+      canvasRef.current.width = 1000; // High res internal
+      canvasRef.current.height = 1000;
       renderFn(canvasRef.current);
     }
   }, [webcamImageUrl, certificationTier, renderFn]);
 
   return (
-    <div style={{ position: "relative", width: 180, height: 180, borderRadius: "50%", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+    <div className="relative w-[280px] h-[280px] rounded-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] border-4 border-white/10 group">
+      <div className="absolute inset-0 bg-[#1B2E4B] animate-pulse opacity-10" />
       <canvas 
         ref={canvasRef} 
-        style={{ width: "100%", height: "100%", display: "block" }}
+        className="w-full h-full block relative z-10"
       />
     </div>
   );
@@ -144,15 +136,8 @@ function generateCertNumber(): string {
   return `HCA-${seg()}-${seg()}`;
 }
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
-
 export default function Certificate({
   name,
-  webcamScore,
-  drawingScore,
-  drawingImageUrl,
   issuedAt,
   aiReport,
   webcamImageUrl,
@@ -163,10 +148,7 @@ export default function Certificate({
   const [downloading, setDownloading] = useState(false);
   const [downloadingFrame, setDownloadingFrame] = useState(false);
 
-  const { domains, modernHumanScore, overallAnalysis, certificationTier,
-    tierDescriptor, tierRationale } = aiReport;
-
-  const DOMAIN_ORDER = ["bio-sensory", "cognitive-friction", "temporal-value", "irrational-link", "motor-autonomy", "biometric-presence"];
+  const { domains, modernHumanScore, overallAnalysis, certificationTier, tierDescriptor } = aiReport;
 
   async function handleDownload() {
     if (!certRef.current || downloading) return;
@@ -174,13 +156,13 @@ export default function Certificate({
     try {
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(certRef.current, {
-        scale: 2,
-        backgroundColor: "#FFFDF5",
+        scale: 2.5,
+        backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
       });
       const link = document.createElement("a");
-      link.download = `humanity-certificate-${certNumber}.png`;
+      link.download = `hca-humanity-proof-${name.replace(/\s+/g, '-').toLowerCase()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } finally {
@@ -192,9 +174,9 @@ export default function Certificate({
     const ctx = canvas.getContext("2d")!;
     const size = canvas.width;
     const center = size / 2;
-    const ringRadius = size * 0.4575; // 183/400 ratio
-    const faceRadius = size * 0.405;   // 162/400 ratio
-    const ringWidth = size * 0.085;    // 34/400 ratio
+    const faceRadius = size * 0.38;
+    const ringRadius = size * 0.44;
+    const ringWidth = size * 0.09;
 
     // Background
     ctx.fillStyle = "#ffffff";
@@ -224,55 +206,51 @@ export default function Certificate({
       ctx.fillStyle = "#1B2E4B";
       ctx.fillRect(0, 0, size, size);
       ctx.fillStyle = "#ffffff";
-      ctx.font = `bold ${Math.round(size * 0.035)}px monospace`;
+      ctx.font = `bold ${Math.round(size * 0.05)}px monospace`;
       ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("NO FACE CAPTURED", center, center);
+      ctx.fillText("BIOMETRIC ERROR", center, center);
     }
-
     ctx.restore();
 
-    // Ring
+    // Dark Ring
     ctx.beginPath();
     ctx.arc(center, center, ringRadius, 0, Math.PI * 2);
     ctx.strokeStyle = "#1B2E4B";
     ctx.lineWidth = ringWidth;
     ctx.stroke();
 
-    // Curved text around ring
-    const text = "HUMAN CERTIFIED · MODERNHUMAN.IO";
-    const anglePerChar = (Math.PI * 2) / text.length;
-    const startAngle = -Math.PI / 2;
-    ctx.font = `bold ${Math.round(size * 0.0275)}px monospace`;
+    // Curved Text: "I AM REAL · HUMAN CERTIFIED · "
+    const text = "I AM REAL · HUMAN STATUS: VERIFIED · MODERNHUMAN.IO · ";
+    ctx.font = `bold ${Math.round(size * 0.026)}px monospace`;
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (let i = 0; i < text.length; i++) {
-      const angle = startAngle + i * anglePerChar;
+    
+    const chars = text.split("");
+    const totalRotation = Math.PI * 2;
+    const anglePerChar = totalRotation / chars.length;
+
+    chars.forEach((char, i) => {
+      const angle = i * anglePerChar - Math.PI / 2;
       ctx.save();
       ctx.translate(center, center);
       ctx.rotate(angle);
       ctx.translate(0, -ringRadius);
-      ctx.fillText(text[i], 0, 0);
+      ctx.fillText(char, 0, 0);
       ctx.restore();
-    }
+    });
 
-    // Badge pill at bottom
-    const badgeText = certificationTier.toUpperCase();
-    const badgeAngle = Math.PI / 2;
-    const badgeCx = center + ringRadius * Math.cos(badgeAngle);
-    const badgeCy = center + ringRadius * Math.sin(badgeAngle);
-    const badgeW = size * 0.18;
-    const badgeH = size * 0.045;
+    // Tier Badge at bottom
+    const badgeW = size * 0.22;
+    const badgeH = size * 0.05;
+    const badgeY = center + ringRadius;
     ctx.fillStyle = "#1B2E4B";
     ctx.beginPath();
-    ctx.roundRect(badgeCx - badgeW / 2, badgeCy - badgeH / 2, badgeW, badgeH, Math.round(size * 0.0225));
+    ctx.roundRect(center - badgeW / 2, badgeY - badgeH / 2, badgeW, badgeH, size * 0.01);
     ctx.fill();
     ctx.fillStyle = "#ffffff";
-    ctx.font = `bold ${Math.round(size * 0.025)}px monospace`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(badgeText, badgeCx, badgeCy);
+    ctx.font = `bold ${Math.round(size * 0.028)}px monospace`;
+    ctx.fillText(certificationTier.toUpperCase(), center, badgeY);
   }
 
   async function handleDownloadProfileFrame() {
@@ -280,12 +258,11 @@ export default function Certificate({
     setDownloadingFrame(true);
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 800;
-      canvas.height = 800;
+      canvas.width = 1200;
+      canvas.height = 1200;
       await renderProfileFrame(canvas);
-
       const link = document.createElement("a");
-      link.download = `profile-frame-${certNumber}.png`;
+      link.download = `human-status-badge-${name.replace(/\s+/g, '-').toLowerCase()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } finally {
@@ -293,342 +270,189 @@ export default function Certificate({
     }
   }
 
-  // Not used anymore as sharing buttons are removed
-  // function handleShareX() { ... }
-  // async function handleCopyLink() { ... }
-
-  const certStyle: React.CSSProperties = {
-    backgroundColor: "#FFFDF5",
-    border: "6px double #1a2744",
-    padding: "36px 44px",
-    maxWidth: 720,
-    width: "100%",
-    fontFamily: "Georgia, 'Times New Roman', serif",
-    color: "#1a1a1a",
-    position: "relative",
-    boxSizing: "border-box",
-  };
-
-  const mono: React.CSSProperties = { fontFamily: "monospace" };
+  const mono = { fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase" as const };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%", paddingBottom: 60 }}>
-
-      {/* ── Certificate document (with mobile scale-to-fit) ────────────────── */}
-      <div className="w-full flex justify-center overflow-hidden py-4">
+    <div className="flex flex-col items-center gap-16 py-12">
+      
+      {/* ─── Premium Certificate ─────────────────────────────────────────── */}
+      <div className="relative group">
+        <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 via-[#1B2E4B]/5 to-emerald-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        
+        {/* Certificate Container */}
         <div 
-          ref={certRef} 
-          style={certStyle}
-          className="origin-top sm:scale-100 scale-[0.65] xs:scale-[0.8] mb-[-120px] xs:mb-[-60px] sm:mb-0"
+          ref={certRef}
+          className="relative bg-white border-[12px] border-[#1B2E4B]/5 p-1 no-overflow shadow-2xl"
+          style={{ width: "100%", maxWidth: 840, aspectRatio: "1.414 / 1" }}
         >
-
-        {/* Corner ornaments */}
-        {(["tl","tr","bl","br"] as const).map((pos) => (
-          <div key={pos} style={{
-            position: "absolute",
-            width: 18, height: 18,
-            top: pos.startsWith("t") ? 12 : undefined,
-            bottom: pos.startsWith("b") ? 12 : undefined,
-            left: pos.endsWith("l") ? 12 : undefined,
-            right: pos.endsWith("r") ? 12 : undefined,
-            borderTop: pos.startsWith("t") ? "2px solid #1a2744" : undefined,
-            borderBottom: pos.startsWith("b") ? "2px solid #1a2744" : undefined,
-            borderLeft: pos.endsWith("l") ? "2px solid #1a2744" : undefined,
-            borderRight: pos.endsWith("r") ? "2px solid #1a2744" : undefined,
-          }} />
-        ))}
-
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <p style={{ ...mono, fontSize: 9, letterSpacing: "0.3em", color: "#999",
-            textTransform: "uppercase", margin: "0 0 8px" }}>
-            Established 2026 · Registration No. IHR-7291
-          </p>
-          <h1 style={{ fontSize: 18, fontWeight: "bold", letterSpacing: "0.08em",
-            color: "#1a2744", textTransform: "uppercase", margin: "0 0 6px" }}>
-            MODERNHUMAN.IO
-          </h1>
-          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744", margin: "0 0 5px" }} />
-          <h2 style={{ ...mono, fontSize: 11, letterSpacing: "0.2em", color: "#1a2744",
-            textTransform: "uppercase", margin: 0, fontWeight: "normal" }}>
-            HUMAN CERTIFICATION AUTHORITY
-          </h2>
-          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744", marginTop: 5 }} />
-        </div>
-
-        {/* Cert number */}
-        <p style={{ ...mono, fontSize: 9, color: "#bbb", textAlign: "right",
-          margin: "0 0 16px", letterSpacing: "0.05em" }}>
-          CERT. NO. {certNumber}
-        </p>
-
-        {/* Recipient */}
-        <p style={{ textAlign: "center", fontSize: 12, color: "#777",
-          fontStyle: "italic", margin: "0 0 6px" }}>
-          This certifies that
-        </p>
-        <p style={{ textAlign: "center", fontSize: 28, fontWeight: "bold",
-          color: "#1a2744", borderBottom: "1px solid #1a2744",
-          paddingBottom: 8, margin: "0 0 16px", letterSpacing: "0.02em" }}>
-          {name}
-        </p>
-
-        {/* Scores row */}
-        <div style={{ display: "flex", justifyContent: "space-between",
-          alignItems: "flex-end", marginBottom: 20 }}>
-          <div>
-            <p style={{ ...mono, fontSize: 9, textTransform: "uppercase",
-              letterSpacing: "0.2em", color: "#888", margin: "0 0 4px" }}>
-              Modern Human Score
-            </p>
-            <p style={{ fontSize: 38, fontWeight: "bold", color: "#1a2744",
-              margin: 0, lineHeight: 1, fontFamily: "monospace" }}>
-              {modernHumanScore}
-              <span style={{ fontSize: 16, color: "#aaa", fontWeight: "normal" }}> /1000</span>
-            </p>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ ...mono, fontSize: 9, textTransform: "uppercase",
-              letterSpacing: "0.2em", color: "#888", margin: "0 0 4px" }}>
-              Certification Tier
-            </p>
-            <p style={{ fontSize: 18, fontWeight: "bold", margin: 0,
-              color: TIER_COLORS[certificationTier] || "#1a2744" }}>
-              {certificationTier}
-            </p>
-            <p style={{ fontStyle: "italic", fontSize: 13, color: "#666", margin: "2px 0 0" }}>
-              {tierDescriptor}
-            </p>
-          </div>
-        </div>
-
-        {/* Domain breakdown */}
-        <div className="flex flex-col md:flex-row gap-5 md:gap-10 items-center md:items-start border-t border-[#e0ddd5] border-b border-[#e0ddd5] py-4 mb-4">
-
-          {/* Radar */}
-          <RadarChart domains={domains} />
-
-          {/* Domain bars */}
-          <div style={{ flex: 1 }}>
-            <p style={{ ...mono, fontSize: 9, fontWeight: "bold",
-              textTransform: "uppercase", letterSpacing: "0.15em",
-              color: "#555", margin: "0 0 10px" }}>
-              Domain Breakdown
-            </p>
-            {DOMAIN_ORDER.map((key) => {
-              const d = domains[key];
-              if (!d) return null;
-              return (
-                <div key={key} style={{ marginBottom: 7 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between",
-                    alignItems: "baseline", marginBottom: 2 }}>
-                    <span style={{ ...mono, fontSize: 9, textTransform: "uppercase",
-                      letterSpacing: "0.1em", color: "#666" }}>
-                      {d.label}
-                    </span>
-                    <span style={{ ...mono, fontSize: 9, color: "#888" }}>
-                      {d.score}/100
-                    </span>
+          {/* Inner Guilloche-style border */}
+          <div className="absolute inset-2 border border-[#1B2E4B]/20" />
+          <div className="absolute inset-4 border-4 border-[#1B2E4B]/10" />
+          
+          <div className="relative h-full bg-white p-12 border border-[#1B2E4B]/5 flex flex-col justify-between">
+            {/* Header Area */}
+            <div className="flex justify-between items-start">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#1B2E4B] flex items-center justify-center">
+                    <span className="text-white text-lg font-bold">HCA</span>
                   </div>
-                  <div style={{ height: 3, backgroundColor: "#e8e5de", borderRadius: 2 }}>
-                    <div style={{
-                      height: "100%",
-                      width: `${d.score}%`,
-                      backgroundColor: "#1a2744",
-                      borderRadius: 2,
-                      opacity: 0.5 + d.score / 200,
-                    }} />
+                  <div>
+                    <h1 style={{ ...mono, fontSize: 14, fontWeight: "bold", color: "#1B2E4B", margin: 0 }}>
+                      Human Certification Authority
+                    </h1>
+                    <p style={{ ...mono, fontSize: 8, color: "#1B2E4B", opacity: 0.4, margin: 0 }}>
+                      Global Registry / Biological Origins Protocol
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-
-            {/* Biometric sub-scores */}
-            <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed #ddd" }}>
-              <div style={{ display: "flex", gap: 16 }}>
-                {[
-                  { label: "Biometric Scan", score: webcamScore },
-                  { label: "Drawing Sample", score: drawingScore },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <span style={{ ...mono, fontSize: 8, textTransform: "uppercase",
-                      letterSpacing: "0.1em", color: "#aaa" }}>
-                      {item.label}
-                    </span>
-                    <span style={{ ...mono, fontSize: 9, color: "#888", marginLeft: 6 }}>
-                      {item.score}/100
-                    </span>
-                  </div>
-                ))}
+              </div>
+              <div className="text-right">
+                <div style={{ ...mono, fontSize: 10, color: "#1B2E4B", opacity: 0.3, marginBottom: 4 }}>RECORD_ID / {dbId?.slice(0, 8)}</div>
+                <div style={{ ...mono, fontSize: 12, fontWeight: "extrabold", color: "#1B2E4B" }}>{certNumber}</div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Overall analysis */}
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ ...mono, fontSize: 9, fontWeight: "bold", textTransform: "uppercase",
-            letterSpacing: "0.15em", color: "#555", margin: "0 0 8px" }}>
-            Assessment Summary
-          </p>
-          <p style={{ fontSize: 12, color: "#444", lineHeight: 1.7, margin: "0 0 6px",
-            fontStyle: "italic" }}>
-            &ldquo;{overallAnalysis}&rdquo;
-          </p>
-          <p style={{ ...mono, fontSize: 9, color: "#aaa", margin: 0 }}>
-            Tier rationale: {tierRationale}
-          </p>
-        </div>
-
-        {/* Drawing thumbnail + signatures */}
-        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-6 sm:gap-0 mb-5">
-
-          {drawingImageUrl && (
-            <div style={{ textAlign: "center" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={drawingImageUrl} alt="Drawing sample"
-                style={{ width: 80, height: 60, border: "1px solid #ddd",
-                  display: "block", objectFit: "contain", backgroundColor: "#fff" }} />
-              <p style={{ ...mono, fontSize: 8, color: "#bbb", marginTop: 3,
-                textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Drawing sample
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
+              <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-[#1B2E4B]/40 mb-4 font-bold italic">
+                 Official Humanity Validation
+              </div>
+              <h2 className="text-5xl font-extrabold text-[#1B2E4B] tracking-tight mb-2">
+                {name}
+              </h2>
+              <div className="w-48 h-0.5 bg-[#1B2E4B]/10 mx-auto mb-8" />
+              
+              <p className="max-w-2xl text-[13px] leading-loose text-[#1B2E4B] font-serif italic mb-10 px-10">
+                &ldquo;{overallAnalysis}&rdquo;
               </p>
-            </div>
-          )}
 
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-10 items-center sm:items-end">
-            {[
-              { sig: "A. Turing", name: "Dr. A. Turing", title: "Chief Humanity Officer" },
-              { sig: "The Board", name: "The Board of", title: "Human Standards" },
-            ].map(({ sig, name: sn, title }) => (
-              <div key={sn} style={{ textAlign: "center" }}>
-                <div style={{ borderBottom: "1px solid #555", width: 120,
-                  paddingBottom: 2, marginBottom: 3 }}>
-                  <p style={{ fontFamily: "'Brush Script MT', cursive, Georgia, serif",
-                    fontSize: 20, color: "#1a2744", margin: 0, fontStyle: "italic",
-                    lineHeight: 1.4 }}>
-                    {sig}
-                  </p>
+              <div className="flex justify-center gap-16 w-full">
+                <div className="flex flex-col items-center">
+                  <RadarChart domains={domains} />
                 </div>
-                <p style={{ ...mono, fontSize: 8, color: "#666", margin: 0 }}>{sn}</p>
-                <p style={{ ...mono, fontSize: 8, color: "#666", margin: 0 }}>{title}</p>
+                <div className="flex flex-col justify-center items-start space-y-6">
+                  <div>
+                    <div className="font-mono text-[8px] uppercase tracking-widest text-[#1B2E4B]/30 mb-1">Modern Human Score</div>
+                    <div className="text-3xl font-bold text-[#1B2E4B] font-mono leading-none">
+                      {modernHumanScore}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-mono text-[8px] uppercase tracking-widest text-[#1B2E4B]/30 mb-1">Humanity Index Tier</div>
+                    <div className="text-xl font-bold text-[#1B2E4B] uppercase tracking-tighter">
+                      {certificationTier}
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Footer Area */}
+            <div className="flex justify-between items-end pt-8 border-t border-[#1B2E4B]/5">
+              <div className="space-y-4">
+                <div className="flex gap-8">
+                  <div>
+                    <span style={{ ...mono, fontSize: 7, color: "#1B2E4B", opacity: 0.3, display: "block", marginBottom: 2 }}>STATUS</span>
+                    <span style={{ ...mono, fontSize: 9, color: "#059669", fontWeight: "bold" }}>BIOMETRICALLY VERIFIED</span>
+                  </div>
+                  <div>
+                    <span style={{ ...mono, fontSize: 7, color: "#1B2E4B", opacity: 0.3, display: "block", marginBottom: 2 }}>AUTHENTICITY</span>
+                    <span style={{ ...mono, fontSize: 9, color: "#1B2E4B", fontWeight: "bold" }}>HARD PROOF CAPTURE</span>
+                  </div>
+                </div>
+                <div style={{ ...mono, fontSize: 9, color: "#1B2E4B", opacity: 0.4 }}>Issued on {issuedAt.toLocaleDateString()} / valid 12 months</div>
+              </div>
+              
+              {/* Seal */}
+              <div className="relative w-24 h-24 opacity-80">
+                <svg viewBox="0 0 100 100" className="w-full h-full text-[#1B2E4B]/10 animate-spin-slow">
+                  <path id="sealPath" fill="none" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" />
+                  <text className="font-bold uppercase tracking-widest fill-current" fontSize="6">
+                    <textPath xlinkHref="#sealPath" startOffset="0%">CERTIFIED HUMANITY AUTHORIZED PROTOCOL • </textPath>
+                  </text>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                   <div className="w-12 h-12 border-2 border-[#1B2E4B]/20 rounded-full flex items-center justify-center">
+                      <span style={{ ...mono, fontSize: 10, fontWeight: "bold", color: "#1B2E4B" }}>HCA</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ghost Watermark */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.015] flex items-center justify-center overflow-hidden">
+               <div className="text-[180px] font-bold font-mono tracking-tighter leading-none select-none uppercase -rotate-12 translate-x-12 translate-y-12">I AM REAL</div>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: "center", borderTop: "1px solid #e0ddd5", paddingTop: 10 }}>
-          <p style={{ ...mono, fontSize: 8, color: "#888", margin: "0 0 3px" }}>
-            Issued: {formatDate(issuedAt)} · Valid for 1 year from date of issue
-          </p>
-          {dbId && (
-            <p style={{ ...mono, fontSize: 8, color: "#1B2E4B", margin: "4px 0", fontWeight: "bold" }}>
-              REGISTERED RECORD ID: {dbId}
-            </p>
-          )}
-          <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            MODERNHUMAN.IO / HUMAN CERTIFICATION AUTHORITY
-          </p>
+        {/* Download Action */}
+        <div className="mt-8 flex justify-center">
+          <button 
+            onClick={handleDownload}
+            disabled={downloading}
+            className="group relative bg-[#1B2E4B] text-white px-12 py-5 text-xs font-bold tracking-[0.3em] uppercase transition-all hover:scale-[1.02] shadow-2xl overflow-hidden disabled:opacity-50"
+          >
+            <span className="relative z-10 flex items-center gap-4">
+              {downloading ? "Generating..." : "Download Official Proof"}
+              <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12l4.5 4.5m0 0l4.5-4.5M12 3v13.5" />
+              </svg>
+            </span>
+          </button>
         </div>
       </div>
-    </div>
- 
-      {/* ── Digital Assets Kit ────────────────────────────────────────────── */}
-      <div style={{ width: "100%", maxWidth: 720, backgroundColor: "#1B2E4B", padding: "40px 30px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4 }}>
-        <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.25em", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", margin: "0 0 10px" }}>
-            Certified Human Assets
-          </h3>
-          <h2 style={{ fontSize: 24, fontWeight: "bold", color: "#ffffff", margin: 0, letterSpacing: "-0.01em" }}>
-            Claim your human status.
-          </h2>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          {/* LinkedIn Frame Preview */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)" }}>
+      {/* ─── Profile Frame Kit ─────────────────────────────────────────── */}
+      <div className="w-full max-w-4xl bg-white border border-[#1A1A1A]/5 shadow-xl p-12 relative overflow-hidden group">
+         <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none font-mono text-[80px] font-bold leading-none rotate-12">BADGE</div>
+         
+         <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="shrink-0">
                <ProfileFramePreview 
-                 webcamImageUrl={webcamImageUrl} 
-                 certificationTier={certificationTier} 
-                 renderFn={renderProfileFrame}
+                  webcamImageUrl={webcamImageUrl}
+                  certificationTier={certificationTier}
+                  renderFn={renderProfileFrame}
                />
             </div>
-            <div>
-              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Biometric Profile Frame</h4>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
-                A biological identity overlay for social profiles. Signals verified status to high-fidelity networks.
-              </p>
-              <button
-                onClick={handleDownloadProfileFrame}
-                disabled={downloadingFrame}
-                className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
-              >
-                {downloadingFrame ? "Creating..." : "Download Profile Badge"}
-              </button>
-            </div>
-          </div>
-
-          {/* Certificate Thumbnail */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }} onClick={handleDownload}>
-              <div style={{ width: 110, height: 140, backgroundColor: "#FFFDF5", border: "1px solid rgba(255,255,255,0.2)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", padding: 8, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}>
-                 <div style={{ width: "100%", height: 1.5, background: "#1B2E4B", marginBottom: 3 }} />
-                 <div style={{ fontSize: 3.5, fontWeight: "bold", color: "#1B2E4B", textAlign: "center", marginBottom: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>HCA REGISTRY</div>
-                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ fontSize: 12, fontWeight: "bold", color: "#1B2E4B", textAlign: "center" }}>
-                     <div style={{ fontSize: 4, fontWeight: "normal", opacity: 0.5 }}>SCORE</div>
-                     {modernHumanScore}
-                   </div>
-                 </div>
-                 <div style={{ fontSize: 3, color: "#1B2E4B", textAlign: "center", padding: "2px 4px", borderTop: "0.5px solid #1B2E4B", width: "100%", textTransform: "uppercase" }}>Proof of Biological Origin</div>
-                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(255,255,255,0.1), transparent)" }} />
-              </div>
-            </div>
-            <div>
-              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Full Humanity Record</h4>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
-                High-resolution institutional record for official identity verification. Matches global registry node data.
-              </p>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
-              >
-                {downloading ? "Generating..." : "Download Full Record"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Domain analysis cards ────────────────────────────────────────────── */}
-      <div className="w-full max-w-[720px] px-6 md:px-0">
-        <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1A1A1A]/40 mb-3">
-          Deep-Layer Protocol Analysis
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {DOMAIN_ORDER.map((key) => {
-            const d = domains[key];
-            if (!d) return null;
-            return (
-              <div key={key} className="border border-[#1A1A1A]/10 p-3 md:p-4 bg-[#FAFAF8]">
-                <div className="flex justify-between items-baseline mb-1.5">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-[#1B2E4B] font-bold">
-                    {d.label}
+            
+            <div className="flex-1 space-y-8 text-center lg:text-left">
+               <div>
+                  <div className="font-mono text-[10px] tracking-[0.25em] mb-3 text-[#1B2E4B]/40 uppercase font-bold">Social Evidence protocol</div>
+                  <h3 className="text-3xl font-bold text-[#1B2E4B] tracking-tight">I AM REAL / LinkedIn Status</h3>
+                  <p className="text-sm text-[#1A1A1A]/50 leading-relaxed font-serif italic mt-4">
+                    Download your high-resolution humanity badge. Optimized for professional networks to signal biological authenticity in a synthetic labor pool.
+                  </p>
+               </div>
+               
+               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <button 
+                    onClick={handleDownloadProfileFrame}
+                    disabled={downloadingFrame}
+                    className="bg-[#1B2E4B] text-white px-8 py-4 text-[10px] font-bold tracking-widest uppercase hover:bg-[#1B2E4B]/90 transition-all flex items-center justify-center gap-3 shadow-lg"
+                  >
+                    {downloadingFrame ? "Creating..." : "Download Status Badge"}
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </button>
+               </div>
+               
+               <div className="pt-6 flex items-center justify-center lg:justify-start gap-4">
+                  <div className="flex -space-x-2">
+                     {[1,2,3].map(i => (
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-[#1B2E4B]/10 flex items-center justify-center overflow-hidden">
+                           <span className="text-[6px] font-mono font-bold text-[#1B2E4B]/20">H</span>
+                        </div>
+                     ))}
+                  </div>
+                  <span className="text-[10px] font-mono text-[#1A1A1A]/30 uppercase tracking-widest">
+                     Part of the Collective Human Defense Registry
                   </span>
-                  <span className="font-mono text-[11px] text-[#1A1A1A]/60">
-                    {d.score}/100
-                  </span>
-                </div>
-                <p className="font-serif text-[12px] text-[#1A1A1A]/65 leading-relaxed italic">
-                  {d.analysis}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

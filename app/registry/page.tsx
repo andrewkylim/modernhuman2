@@ -147,7 +147,7 @@ export default function RegistryPage() {
             {assessments.map((human) => (
               <Link 
                 key={human.id} 
-                href={`/verify?id=${human.id}`}
+                href={`/verify/${human.id}`}
                 className="group relative bg-white border border-[#1B2E4B]/5 hover:border-[#1B2E4B]/20 transition-all hover:shadow-2xl hover:-translate-y-1 block"
               >
                 <div className="aspect-square bg-slate-900 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
