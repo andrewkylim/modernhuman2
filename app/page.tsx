@@ -26,12 +26,12 @@ function BiometricViz({ dark = false }: { dark?: boolean }) {
   return (
     <div className="relative w-full max-w-[420px] mx-auto select-none group">
       {/* Face Image Background Overlay */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.22] group-hover:opacity-[0.28] transition-opacity duration-1000 scale-95 group-hover:scale-100 transform duration-1000">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.45] group-hover:opacity-[0.6] transition-opacity duration-1000 scale-95 group-hover:scale-100 transform duration-1000">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src="/images/face.png" 
           alt="" 
-          className="w-full h-full object-contain mix-blend-lighten grayscale brightness-125"
+          className="w-full h-full object-contain mix-blend-lighten brightness-150 contrast-125"
         />
       </div>
 
@@ -217,6 +217,11 @@ export default function Home() {
                 </span>
               </h1>
 
+              {/* Mobile Radar (Under title) */}
+              <div className="md:hidden mb-12 opacity-90 scale-90 -mt-4">
+                <BiometricViz dark />
+              </div>
+
               <p className="text-[16px] text-white/65 max-w-sm leading-relaxed mb-6 font-serif italic">
                 In an era of synthetic consciousness, human status is no longer assumed. 
                 The HCA provides high-fidelity, data-backed certification of biological origin.
@@ -234,7 +239,8 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="order-last block opacity-80 md:opacity-100 transform scale-90 md:scale-100 origin-center">
+            {/* Desktop Radar */}
+            <div className="hidden md:block">
               <BiometricViz dark />
             </div>
           </div>
