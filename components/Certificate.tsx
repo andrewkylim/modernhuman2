@@ -519,17 +519,16 @@ export default function Certificate({
 
         {/* Footer */}
         <div style={{ textAlign: "center", borderTop: "1px solid #e0ddd5", paddingTop: 10 }}>
-          <p style={{ ...mono, fontSize: 9, color: "#888", margin: "0 0 3px" }}>
+          <p style={{ ...mono, fontSize: 8, color: "#888", margin: "0 0 3px" }}>
             Issued: {formatDate(issuedAt)} · Valid for 1 year from date of issue
           </p>
           {dbId && (
             <p style={{ ...mono, fontSize: 8, color: "#1B2E4B", margin: "4px 0", fontWeight: "bold" }}>
-              VERIFICATION URL: https://modernhuman.io/verify?id={dbId}
+              REGISTERED DOSSIER ID: {dbId}
             </p>
           )}
-          <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0 }}>
-            This certificate is issued by the Human Certification Authority and certifies the above
-            individual as human pending annual re-evaluation. Verification at modernhuman.io.
+          <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            MODERNHUMAN.IO / HUMAN CERTIFICATION AUTHORITY
           </p>
         </div>
       </div>
@@ -542,7 +541,7 @@ export default function Certificate({
             Certified Human Assets
           </h3>
           <h2 style={{ fontSize: 24, fontWeight: "bold", color: "#ffffff", margin: 0, letterSpacing: "-0.01em" }}>
-            Your digital identity kit.
+            Claim your humanity dossier.
           </h2>
         </div>
 
@@ -557,16 +556,16 @@ export default function Certificate({
                />
             </div>
             <div>
-              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>LinkedIn Profile Frame</h4>
+              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Biometric Profile Frame</h4>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
-                A circular overlay featuring your biometric scan and HCA certification tier. Use this as your profile picture to signal verified origin.
+                A biological identity overlay for social profiles. Signals verified status to high-fidelity networks.
               </p>
               <button
                 onClick={handleDownloadProfileFrame}
                 disabled={downloadingFrame}
                 className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
               >
-                {downloadingFrame ? "Creating..." : "Download Profile Frame"}
+                {downloadingFrame ? "Creating..." : "Download Profile Badge"}
               </button>
             </div>
           </div>
@@ -575,29 +574,29 @@ export default function Certificate({
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: 24, display: "flex", justifyContent: "center", alignItems: "center", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }} onClick={handleDownload}>
               <div style={{ width: 110, height: 140, backgroundColor: "#FFFDF5", border: "1px solid rgba(255,255,255,0.2)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", padding: 8, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}>
-                <div style={{ width: "100%", height: 1.5, background: "#1B2E4B", marginBottom: 3 }} />
-                <div style={{ fontSize: 3.5, fontWeight: "bold", color: "#1B2E4B", textAlign: "center", marginBottom: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>MODERNHUMAN.IO</div>
-                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                   <div style={{ fontSize: 12, fontWeight: "bold", color: "#1B2E4B", textAlign: "center" }}>
-                    <div style={{ fontSize: 4, fontWeight: "normal", opacity: 0.5 }}>SCORE</div>
-                    {modernHumanScore}
-                  </div>
-                </div>
-                <div style={{ fontSize: 3, color: "#1B2E4B", textAlign: "center", padding: "2px 4px", borderTop: "0.5px solid #1B2E4B", width: "100%", textTransform: "uppercase" }}>Certificate of Humanity</div>
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(255,255,255,0.1), transparent)" }} />
+                 <div style={{ width: "100%", height: 1.5, background: "#1B2E4B", marginBottom: 3 }} />
+                 <div style={{ fontSize: 3.5, fontWeight: "bold", color: "#1B2E4B", textAlign: "center", marginBottom: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>HCA REGISTRY</div>
+                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ fontSize: 12, fontWeight: "bold", color: "#1B2E4B", textAlign: "center" }}>
+                     <div style={{ fontSize: 4, fontWeight: "normal", opacity: 0.5 }}>SCORE</div>
+                     {modernHumanScore}
+                   </div>
+                 </div>
+                 <div style={{ fontSize: 3, color: "#1B2E4B", textAlign: "center", padding: "2px 4px", borderTop: "0.5px solid #1B2E4B", width: "100%", textTransform: "uppercase" }}>Proof of Biological Origin</div>
+                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(rgba(255,255,255,0.1), transparent)" }} />
               </div>
             </div>
             <div>
-              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Full Humanity Certificate</h4>
+              <h4 style={{ color: "#ffffff", fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>Full Humanity Record</h4>
               <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.6, marginBottom: 16 }}>
-                Your official certification document in print-ready high resolution. Includes your domain breakdown and tier rationale.
+                High-resolution institutional record for official identity verification. Matches global registry node data.
               </p>
               <button
                 onClick={handleDownload}
                 disabled={downloading}
                 className="font-mono text-[9px] tracking-widest uppercase border border-white/20 text-white px-6 py-3 hover:bg-white hover:text-[#1B2E4B] transition-colors disabled:opacity-40 w-full"
               >
-                {downloading ? "Generating..." : "Download Certificate"}
+                {downloading ? "Generating..." : "Download Full Record"}
               </button>
             </div>
           </div>
@@ -607,7 +606,7 @@ export default function Certificate({
       {/* ── Domain analysis cards ────────────────────────────────────────────── */}
       <div className="w-full max-w-[720px] px-6 md:px-0">
         <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1A1A1A]/40 mb-3">
-          Domain Analysis
+          Deep-Layer Protocol Analysis
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {DOMAIN_ORDER.map((key) => {

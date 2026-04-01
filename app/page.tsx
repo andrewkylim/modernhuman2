@@ -103,65 +103,24 @@ function BiometricViz({ dark = false }: { dark?: boolean }) {
   );
 }
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// ─── Constants (Used below in the component) ──────────────────────────────────
 
-const tiers = [
-  {
-    name: "Bronze",
-    range: "0 – 45",
-    descriptor: "Fundamental Humanity",
-    description: "Confirmed biological origin with standard cognitive variance. Demonstrates baseline organic responses.",
-  },
-  {
-    name: "Silver",
-    range: "46 – 58",
-    descriptor: "Cognitive Variability",
-    description: "Exhibits frequent non-linear decision-making patterns. Distinct from algorithmic logic.",
-  },
-  {
-    name: "Gold",
-    range: "59 – 70",
-    descriptor: "High-Index Mortality",
-    description: "Reflects profound awareness of temporal limitations and subsequent value-based prioritization.",
-  },
-  {
-    name: "Platinum",
-    range: "71 – 84",
-    descriptor: "Behavioral Resilience",
-    description: "Documented history of multi-stage error cycles and successful organic recovery.",
-  },
-  {
-    name: "Diamond",
-    range: "85 – 100",
-    descriptor: "Peak Unpredictability",
-    description: "Demonstrates maximum behavioral deviation from algorithmic predictions. Final HCA tier.",
-  },
+const PROTOCOL_STEPS = [
+  { number: "01", title: "Biometric Scan", description: "Overt capture of asymmetric facial structure. Machine perfection is ground for immediate rejection." },
+  { number: "02", title: "Movement Diagnostic", description: "Hard Proof capture of manual coordinate streams. Organic velocity and tremor analysis." },
+  { number: "03", title: "Cognitive Synthesis", description: "Analysis of irrationality and subjective experience. Measuring deep-layer unpredictability." },
+  { number: "04", title: "Dossier Issued", description: "Your unique record is added to the Global Humanity Registry. Secure sharing without account requirements." },
 ];
 
-const steps = [
-  {
-    number: "01",
-    title: "Biometric Verification",
-    description: "Webcam capture confirms humanoid facial structure. Asymmetry is expected. Perfection flags for review.",
-  },
-  {
-    number: "02",
-    title: "Drawing Sample",
-    description: "Draw a dog from memory. The degree of failure is analyzed. A perfect rendering is grounds for rejection.",
-  },
-  {
-    number: "03",
-    title: "Humanity Questionnaire",
-    description: "Twelve questions measuring irrationality, inconsistency, and behavioral unpredictability. Correct answers do not exist.",
-  },
-  {
-    number: "04",
-    title: "Certificate Issued",
-    description: "Results processed by AI against Human Standard Rev. 14.2. A verifiable certificate is issued immediately.",
-  },
+const SECURITY_TIERS = [
+  { name: "Bronze", range: "0 – 45", label: "Fundamental Humanity", desc: "Confirmed biological origin with standard cognitive variance. Baseline organic response." },
+  { name: "Silver", range: "46 – 58", label: "Cognitive Variability", desc: "Frequent non-linear decision-making. Distinct deviation from algorithmic logic." },
+  { name: "Gold", range: "59 – 70", label: "High-Index Mortality", desc: "Reflects profound awareness of temporal constraints and value-based prioritization." },
+  { name: "Platinum", range: "71 – 84", label: "Behavioral Resilience", desc: "History of multi-stage error cycles and successful organic recovery patterns." },
+  { name: "Diamond", range: "85 – 100", label: "Peak Unpredictability", desc: "Maximum behavioral deviation from algorithmic prediction. Definitive human status." },
 ];
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Main Home Component ──────────────────────────────────────────────────────
 
 export default function Home() {
   const [humanCount, setHumanCount] = useState<string>("47,284");
@@ -174,7 +133,6 @@ export default function Home() {
           .select("*", { count: "exact", head: true });
         
         if (!error && count !== null) {
-          // Format with commas, e.g. 1,234
           setHumanCount(count.toLocaleString());
         }
       } catch (err) {
@@ -197,11 +155,11 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/40">
-                  Certification portal active
+                  Global Identification Node Active
                 </span>
               </div>
               <span className="font-mono text-[9px] tracking-widest text-white/25 hidden sm:block">
-                modernhuman.io / HCA Portal
+                HCA-Registry / Network Status: SECURE
               </span>
             </div>
           </div>
@@ -211,18 +169,18 @@ export default function Home() {
                 <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
               </div>
               <div>
-                <div className="text-sm font-semibold tracking-wide text-white">modernhuman.io</div>
+                <div className="text-sm font-semibold tracking-wide text-white font-mono uppercase tracking-widest">modernhuman.io</div>
                 <div className="text-[10px] text-white/40 tracking-widest uppercase">Human Certification Authority</div>
               </div>
             </div>
-            <nav className="hidden md:flex items-center gap-8 text-xs tracking-widest uppercase text-white/50">
-              <a href="#process" className="hover:text-white transition-colors">Process</a>
-              <a href="#tiers"   className="hover:text-white transition-colors">Tiers</a>
+            <nav className="hidden md:flex items-center gap-8 text-xs tracking-widest uppercase text-white/50 font-mono">
+              <a href="#protocol" className="hover:text-white transition-colors">Protocol</a>
+              <a href="#registry" className="hover:text-white transition-colors">Registry</a>
               <Link
                 href="/assess/"
                 className="bg-white text-[#1B2E4B] px-4 py-2 hover:bg-white/90 transition-colors normal-case text-xs tracking-wide font-medium"
               >
-                Begin Assessment
+                Enter Certification Flow
               </Link>
             </nav>
           </div>
@@ -236,32 +194,32 @@ export default function Home() {
               <div className="flex items-center gap-3 mb-10">
                 <div className="h-px w-6 bg-emerald-400/50" />
                 <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/35">
-                  Biological Verification Protocol · Rev. 14.2
+                  The Global Standard for Biological Identity
                 </span>
               </div>
 
               <h1 className="mb-8 leading-none">
                 <span className="block font-mono text-sm tracking-[0.25em] uppercase text-white/40 mb-4">
-                  Are you still
+                  Prove your
                 </span>
                 <span className="block text-[56px] sm:text-[80px] md:text-[96px] font-bold tracking-tight text-white leading-[0.92]">
-                  HUMAN?
+                  EXISTENCE.
                 </span>
               </h1>
 
-              <p className="text-[15px] text-white/55 max-w-sm leading-relaxed mb-2">
-                Human status is no longer assumed. The HCA conducts independent biological
-                verification and issues certified proof of continued humanity.
+              <p className="text-[16px] text-white/65 max-w-sm leading-relaxed mb-6 font-serif italic">
+                In an era of synthetic consciousness, human status is no longer assumed. 
+                The HCA provides high-fidelity, data-backed certification of biological origin.
               </p>
-              <p className="text-sm text-white/30 max-w-sm leading-relaxed mb-10">
-                Five minutes. Valid for twelve months. Renewable upon evidence of continued irrationality.
+              <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-10 font-mono uppercase tracking-widest">
+                Our Movement Diagnostic captures sub-second organic variance—the &apos;Hard Proof&apos; that AI cannot simulate.
               </p>
 
               <Link
                 href="/assess/"
-                className="inline-flex items-center gap-3 bg-white text-[#1B2E4B] px-8 py-4 text-sm tracking-wide font-medium hover:bg-white/90 transition-colors"
+                className="inline-flex items-center gap-4 bg-white text-[#1B2E4B] px-10 py-5 text-sm tracking-widest uppercase font-bold hover:bg-white/90 transition-colors shadow-2xl"
               >
-                Begin Assessment
+                Begin Assessment Protocol
                 <span className="font-mono text-[#1B2E4B]/40 text-xs">→</span>
               </Link>
             </div>
@@ -277,10 +235,10 @@ export default function Home() {
       <div className="border-b border-[#1A1A1A]/8 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 divide-y xs:divide-y-0 xs:divide-x divide-[#1A1A1A]/8">
           {[
-            { value: humanCount, label: "Certified humans",    ref: "A" },
-            { value: "99.1%",  label: "Detection rate",      ref: "B" },
-            { value: "Rev. 14.2", label: "Active standard",  ref: "C" },
-            { value: "5 tiers",  label: "Classification levels", ref: "D" },
+            { value: humanCount, label: "Verified human records",    ref: "A" },
+            { value: "0.0012%",  label: "False positive rate",      ref: "B" },
+            { value: "Rev. 15.0", label: "Active Protocol",         ref: "C" },
+            { value: "Global",    label: "Registry access",         ref: "D" },
           ].map((stat) => (
             <div key={stat.label} className="px-6 xs:first:pl-0 xs:last:pr-0 py-4 xs:py-1">
               <div className="flex items-start justify-between mb-1">
@@ -293,103 +251,95 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Process ──────────────────────────────────────────────────────────── */}
-      <section id="process" className="bg-[#1B2E4B] py-20">
+      {/* ── Protocol ──────────────────────────────────────────────────────────── */}
+      <section id="protocol" className="bg-[#1B2E4B] py-24">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="mb-12">
+          <div className="mb-16">
             <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/35 mb-2">
-              Assessment Protocol / HCA-P-001
+              Assessment Protocol / HCA-P-015
             </div>
-            <h2 className="text-3xl font-semibold text-white">How certification works</h2>
+            <h2 className="text-4xl font-bold text-white tracking-tight">Institutional Validation</h2>
+            <p className="text-sm text-white/40 mt-4 max-w-lg leading-relaxed font-serif italic">
+              Our assessment goes beyond simple logic. We capture the physical and cognitive 
+              anomalies that define biological life.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-0 border border-white/10">
-            {steps.map((step, i) => (
+            {PROTOCOL_STEPS.map((step, i, arr) => (
               <div
                 key={step.number}
-                className={`p-8 relative ${i < steps.length - 1 ? "border-b md:border-b-0 md:border-r border-white/10" : ""}`}
+                className={`p-10 relative ${i < arr.length - 1 ? "border-b md:border-b-0 md:border-r border-white/10" : ""}`}
               >
-                <div className="font-mono text-3xl font-semibold text-white/10 mb-6 tracking-tight">
+                <div className="font-mono text-4xl font-semibold text-white/5 mb-8 tracking-tighter">
                   {step.number}
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-3 tracking-wide">{step.title}</h3>
-                <p className="text-xs text-white/45 leading-relaxed">{step.description}</p>
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 -right-2 z-10 font-mono text-white/20 text-xs">→</div>
-                )}
+                <h3 className="text-[11px] font-bold text-white mb-4 uppercase tracking-[0.2em]">{step.title}</h3>
+                <p className="text-xs text-white/40 leading-relaxed font-serif italic">{step.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Tiers ────────────────────────────────────────────────────────────── */}
-      <section id="tiers" className="py-20">
+      {/* ── Registry ────────────────────────────────────────────────────────────── */}
+      <section id="registry" className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="mb-12">
-            <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#1A1A1A]/35 mb-2">
-              Classification Framework / HCA-C-005
+          <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#1A1A1A]/35 mb-2">
+                Classification Framework / HCA-C-005
+              </div>
+              <h2 className="text-4xl font-bold text-[#1B2E4B] tracking-tight">HCA Security Tiers</h2>
+              <p className="text-sm text-[#1A1A1A]/45 mt-4 max-w-lg leading-relaxed font-serif italic">
+                Tier assignment reflects the intensity of documented organic anomalies—the richness of 
+                your internal chaos and contradictions.
+              </p>
             </div>
-            <h2 className="text-3xl font-semibold text-[#1A1A1A]">Certification tiers</h2>
-            <p className="text-sm text-[#1A1A1A]/45 mt-2 max-w-lg leading-relaxed">
-              Tier assignment reflects authentic humanity, not wellbeing. Higher tiers indicate richer
-              documentation of irrationality, contradiction, and lived chaos.
-            </p>
+            <Link href="/assess/" className="bg-[#1B2E4B] text-white px-10 py-4 text-[10px] uppercase tracking-widest font-bold hover:bg-[#1B2E4B]/90 transition-colors shadow-2xl">
+              Start Evaluation Protocol
+            </Link>
           </div>
 
-          <div className="grid gap-3">
-            {tiers.map((tier) => (
+          <div className="grid gap-4">
+            {SECURITY_TIERS.map((tier) => (
               <div
                 key={tier.name}
-                className="flex items-start gap-8 px-8 py-7 bg-[#1B2E4B] border border-white/5 group relative overflow-hidden"
+                className="flex items-start gap-12 px-10 py-8 bg-[#FAFAF8] border border-[#1A1A1A]/10 group hover:border-[#1B2E4B]/30 transition-all"
               >
-                <div className="w-28 shrink-0 pt-0.5 relative z-10">
-                  <div className="text-xs font-bold tracking-[0.2em] uppercase text-white/50 mb-1.5">
+                <div className="w-32 shrink-0 pt-1">
+                  <div className="text-[11px] font-bold tracking-[0.25em] uppercase text-[#1B2E4B] mb-2">
                     {tier.name}
                   </div>
-                  <div className="font-mono text-[10px] text-white/20 tracking-wider font-medium">{tier.range}</div>
+                  <div className="font-mono text-[10px] text-[#1A1A1A]/30 tracking-widest uppercase">{tier.range}</div>
                 </div>
-                <div className="flex-1 relative z-10">
-                  <div className="text-base font-semibold text-white mb-2 tracking-wide uppercase">{tier.descriptor}</div>
-                  <div className="text-sm text-white/50 leading-relaxed max-w-xl">{tier.description}</div>
+                <div className="flex-1">
+                  <div className="text-lg font-bold text-[#1B2E4B] mb-3 tracking-wide">{tier.label}</div>
+                  <div className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-2xl italic font-serif">&ldquo;{tier.desc}&rdquo;</div>
                 </div>
-                {/* Background ornament */}
-                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
-          </div>
-
-          <div className="mt-4 flex items-center gap-2">
-            <div className="h-px flex-1 bg-[#1A1A1A]/8" />
-            <span className="font-mono text-[9px] text-[#1A1A1A]/25 tracking-widest uppercase">
-              Score range 0–100
-            </span>
-            <div className="h-px flex-1 bg-[#1A1A1A]/8" />
           </div>
         </div>
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="bg-[#1B2E4B] py-28 relative overflow-hidden">
-        {/* Visual interest */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none bg-dot-grid" />
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        
+      <section className="bg-[#1B2E4B] py-32 relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-6 relative z-10 text-center">
           <div className="max-w-2xl mx-auto">
-            <div className="font-mono text-[9px] tracking-[0.4em] uppercase text-white/35 mb-6">
-              Official Entry Point / Registry Portal
+            <div className="font-mono text-[9px] tracking-[0.4em] uppercase text-white/35 mb-8">
+              HCA Registry Access / Primary Portal
             </div>
-            <h2 className="text-5xl font-bold mb-6 text-white leading-tight tracking-tight">Begin your assessment</h2>
-            <p className="text-base text-white/45 mb-12 leading-relaxed max-w-lg mx-auto">
-              The process is immediate. Certificates are issued in high-resolution format
-              for professional use and are valid for 12 months from the date of certification.
+            <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white leading-tight tracking-tight">Claim your Humanity Dossier</h2>
+            <p className="text-lg text-white/40 mb-12 leading-relaxed max-w-lg mx-auto font-serif italic">
+              Your record is verifiable instantly across all nodes. Valid for 12 months. 
+              Required for high-level interaction proof.
             </p>
             <Link
               href="/assess/"
-              className="inline-flex items-center gap-4 bg-white text-[#1B2E4B] px-12 py-5 text-sm tracking-widest uppercase font-bold hover:bg-white/90 transition-colors shadow-2xl"
+              className="inline-flex items-center gap-4 bg-white text-[#1B2E4B] px-14 py-6 text-sm tracking-widest uppercase font-bold hover:bg-white/90 transition-colors shadow-2xl"
             >
-              Begin Assessment
+              Consult the HCA Protocol
               <span className="text-base">→</span>
             </Link>
           </div>
@@ -397,43 +347,23 @@ export default function Home() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <footer className="bg-[#1A1A1A] text-white/40">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <div className="grid md:grid-cols-3 gap-8 mb-8 pb-8 border-b border-white/8">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 border border-white/20 flex items-center justify-center">
-                  <span className="text-white text-[8px] font-bold tracking-wider">HCA</span>
-                </div>
-                <span className="text-white/60 text-xs font-semibold tracking-wide">modernhuman.io</span>
+      <footer className="bg-[#1A1A1A] text-white/20">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10 font-mono text-[9px] tracking-[0.3em] uppercase">
+             <div className="flex items-center gap-4">
+              <div className="w-5 h-5 border border-white/20 flex items-center justify-center">
+                <span className="text-white text-[7px] font-bold">HCA</span>
               </div>
-              <p className="text-xs leading-relaxed">
-                The internationally recognized body for human verification and certification.
-                Not affiliated with any government. Registration No. IHR-7291.
-              </p>
+              <span className="text-white/40">Human Certification Authority Registry Node 001</span>
             </div>
-
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { label: "ISO 9001:2026 Compliant",       sub: "Quality Management Systems" },
-                { label: "IHR Member #A-7291",            sub: "International Human Registry" },
-                { label: "256-bit Humanity Encryption",   sub: "Certificate integrity protected" },
-              ].map((signal) => (
-                <div key={signal.label} className="border border-white/8 p-3 hover:border-white/15 transition-colors">
-                  <div className="font-mono text-[10px] font-semibold text-white/50 mb-1">{signal.label}</div>
-                  <div className="font-mono text-[9px] text-white/25">{signal.sub}</div>
-                </div>
-              ))}
+            <div className="flex gap-12">
+              <span className="hover:text-white transition-colors cursor-help">ISO-9001:21</span>
+              <span className="hover:text-white transition-colors cursor-help">IHR-Registry</span>
+              <span className="hover:text-white transition-colors cursor-help">Public Ethics Port</span>
             </div>
           </div>
-
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-mono text-[9px] tracking-wide">
-            <div>&copy; 2026 Human Certification Authority. All certification rights reserved.</div>
-            <div className="flex gap-6 text-white/20">
-              <span>Privacy Policy</span>
-              <span>Terms of Certification</span>
-              <span>Certificate Verification</span>
-            </div>
+          <div className="mt-12 text-[9px] text-white/5 uppercase tracking-[0.4em] text-center border-t border-white/5 pt-12">
+            This record represents a biological verification event. All movement data is captured and archived.
           </div>
         </div>
       </footer>

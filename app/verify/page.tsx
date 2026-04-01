@@ -5,6 +5,17 @@ import { Suspense, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { AIReport } from "@/components/Certificate";
+import DrawingReplay from "@/components/DrawingReplay";
+
+interface Point {
+  x: number;
+  y: number;
+  time: number;
+}
+
+interface Stroke {
+  points: Point[];
+}
 
 interface AssessmentRecord {
   id: string;
@@ -14,6 +25,7 @@ interface AssessmentRecord {
   ai_report: AIReport;
   webcam_url?: string;
   drawing_url?: string;
+  drawing_path?: Stroke[];
   created_at: string;
 }
 
@@ -96,27 +108,20 @@ function VerifyContent() {
               </span>
             </div>
             <span className="font-mono text-[9px] tracking-widest text-white/25 hidden sm:block">
-              HCA-Registry / VER-902-X
+              HCA-Registry / Network Status: SECURE
             </span>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 border border-white/25 flex items-center justify-center group-hover:border-white transition-colors">
-              <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
+          <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border border-white/25 flex items-center justify-center">
+                <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
+              </div>
+              <div className="text-sm font-semibold tracking-wide text-white uppercase tracking-widest">
+                Official Humanity Dossier
+              </div>
             </div>
-            <div>
-              <div className="text-sm font-semibold tracking-wide text-white">modernhuman.io</div>
-              <div className="text-[10px] text-white/40 tracking-widest uppercase">Human Certification Authority</div>
-            </div>
-          </Link>
-          <Link
-            href="/"
-            className="text-[10px] font-bold tracking-widest uppercase text-white/50 hover:text-white transition-colors"
-          >
-            Terminal Home
-          </Link>
-        </div>
+          </div>
       </div>
 
       {/* Main Content */}
@@ -137,16 +142,19 @@ function VerifyContent() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#1A1A1A]/35">
-                  Subject Identifier
-                </div>
-                <div className="text-2xl font-bold text-[#1B2E4B] tracking-tight truncate">
+              <div className="mb-6">
+                <div className="font-mono text-[9px] text-[#1B2E4B]/40 uppercase tracking-[0.2em] mb-1">Subject Identity</div>
+                <div className="text-3xl font-bold text-[#1B2E4B] tracking-tight truncate">
                   {record.name}
                 </div>
-                <p className="font-mono text-[8px] text-[#1B2E4B] mt-2 font-bold uppercase tracking-widest">
-                  VERIFICATION URL: https://modernhuman.io/verify?id={record.id}
-                </p>
+                <div className="mt-4 flex items-center gap-4">
+                  <div className="bg-[#1B2E4B] text-white px-3 py-1 text-[9px] font-bold tracking-widest uppercase">
+                    {record.certification_tier} TIER
+                  </div>
+                  <div className="font-mono text-[9px] text-[#1B2E4B]/40 uppercase tracking-widest">
+                    Registry ID: {record.id.slice(0, 8)}...
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -174,15 +182,25 @@ function VerifyContent() {
                 Biometric Archives
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {record.drawing_url && (
-                  <div className="space-y-2">
-                    <p className="font-mono text-[8px] text-[#1A1A1A]/40 uppercase tracking-widest">Drawing Sample</p>
-                    <div className="bg-white border border-[#1A1A1A]/10 p-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={record.drawing_url} alt="Human drawing" className="w-full h-auto grayscale opacity-80" />
+                <div className="space-y-4">
+                   <div className="bg-[#1B2E4B]/5 border border-[#1B2E4B]/10 p-4">
+                    <div className="font-mono text-[9px] text-[#1B2E4B] uppercase tracking-widest font-bold mb-2 flex items-center gap-2">
+                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                       Hard Proof Movement Diagnostic
                     </div>
+                    {record.drawing_path ? (
+                      <DrawingReplay strokes={record.drawing_path} />
+                    ) : (
+                      <div className="bg-white border border-[#1A1A1A]/10 p-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={record.drawing_url} alt="Human drawing" className="w-full h-auto grayscale opacity-80" />
+                      </div>
+                    )}
+                    <p className="mt-3 text-[9px] font-mono text-[#1A1A1A]/40 leading-relaxed uppercase tracking-widest">
+                       Data captures sub-second organic variance, manual coordinate streams, and velocity analysis.
+                    </p>
                   </div>
-                )}
+                </div>
                 {record.webcam_url && (
                   <div className="space-y-2">
                     <p className="font-mono text-[8px] text-[#1A1A1A]/40 uppercase tracking-widest">Biometric Scan</p>
@@ -264,8 +282,10 @@ function VerifyContent() {
 export default function VerifyPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#1B2E4B] border-t-transparent rounded-full animate-spin" />
+       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-[#1B2E4B] border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     }>
       <VerifyContent />

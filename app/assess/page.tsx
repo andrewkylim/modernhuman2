@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Certificate, { AIReport } from "@/components/Certificate";
@@ -11,73 +11,42 @@ import { supabase } from "@/lib/supabase";
 const WebcamCheck = dynamic(() => import("@/components/WebcamCheck"), { ssr: false });
 const DrawingTest = dynamic(() => import("@/components/DrawingTest"), { ssr: false });
 
-// ─── Step components ──────────────────────────────────────────────────────────
+interface Point {
+  x: number;
+  y: number;
+  time: number;
+}
 
-function NameEntry({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-          Step 1 of 6
-        </div>
-        <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Identity registration</h2>
-        <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
-          Provide your full legal name as it will appear on your certificate. Nicknames are
-          accepted. Handles are not.
-        </p>
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold tracking-widest uppercase text-[#1A1A1A]/60 mb-2">
-          Full Name
-        </label>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="e.g. Jane A. Mortal"
-          className="w-full max-w-sm border border-[#1A1A1A]/20 bg-white px-4 py-3 text-sm text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 focus:outline-none focus:border-[#1B2E4B] transition-colors"
-        />
-        <p className="text-[10px] text-[#1A1A1A]/35 mt-2">
-          This name will be printed on your official Human Certificate.
-        </p>
-      </div>
-    </div>
-  );
+interface Stroke {
+  points: Point[];
 }
 
 // ─── Step config ──────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { id: "name",      label: "Identity"   },
-  { id: "webcam",    label: "Biometric"  },
-  { id: "drawing",   label: "Drawing"    },
-  { id: "verification", label: "Verification" },
-  { id: "questions", label: "Assessment" },
-  { id: "results",   label: "Certificate"},
+  { id: "name",         label: "Identity"   },
+  { id: "webcam",       label: "Biometric Scan"  },
+  { id: "drawing",      label: "Movement Diagnostic"    },
+  { id: "verification", label: "Liveness Proof" },
+  { id: "questions",    label: "Cognitive Analysis" },
+  { id: "results",      label: "Official Record"},
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
 
-// Steps that auto-advance — no Continue button shown
-const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "verification", "questions"];
+// Steps that auto-advance
+const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "verification"];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AssessPage() {
   const [currentStep, setCurrentStep] = useState<StepId>("name");
   const [name, setName] = useState("");
-  const [questionAnswers, setQuestionAnswers] = useState<FormattedAnswer[]>([]);
   const [webcamScore, setWebcamScore] = useState(0);
   const [webcamImageUrl, setWebcamImageUrl] = useState("");
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
+  const [drawingStrokes, setDrawingStrokes] = useState<Stroke[]>([]); 
   const [aiReport, setAiReport] = useState<AIReport | null>(null);
   const [dbId, setDbId] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -95,123 +64,72 @@ export default function AssessPage() {
     if (!isFirst) setCurrentStep(STEPS[currentIndex - 1].id);
   }
 
-  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep) && currentStep !== "results";
+  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep) && currentStep !== "results" && currentStep !== "questions";
   const canAdvance = currentStep !== "name" || name.trim().length > 0;
 
-  // Trigger AI analysis when drawing step completes and we reach results
-  useEffect(() => {
-    if (currentStep !== "results" || aiReport || analyzing) return;
-
-    setAnalyzing(true);
-    setAnalyzeError(null);
-
-    fetch("/api/analyze", {
+  async function analyzeAssessment(answers: FormattedAnswer[], ws: number, ds: number) {
+    const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name.trim() || "Anonymous Human",
-        answers: questionAnswers,
-        webcamScore,
-        drawingScore,
+        answers,
+        webcamScore: ws,
+        drawingScore: ds,
       }),
-    })
-      .then((res) => {
-        if (!res.ok) return res.json().then((e) => Promise.reject(e.message || "Analysis failed"));
-        return res.json();
-      })
-      .then(async (report: AIReport) => {
-        setAiReport(report);
-        
-        // Save to Supabase
-        try {
-          const { data, error } = await supabase
-            .from("assessments")
-            .insert({
-              name: name.trim() || "Anonymous Human",
-              modern_human_score: report.modernHumanScore,
-              certification_tier: report.certificationTier,
-              ai_report: report,
-              webcam_url: webcamImageUrl,
-              drawing_url: drawingImageUrl,
-            })
-            .select("id")
-            .single();
-
-          if (error) throw error;
-          if (data) setDbId(data.id);
-        } catch (dbErr) {
-          console.error("Database save failed:", dbErr);
-          // We still show the report even if save fails, but no permalink
-        }
-        
-        setAnalyzing(false);
-      })
-      .catch((err) => {
-        setAnalyzeError(typeof err === "string" ? err : "Analysis failed. Please try again.");
-        setAnalyzing(false);
-      });
-  }, [currentStep]); // eslint-disable-line react-hooks/exhaustive-deps
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || "Analysis failed");
+    }
+    return res.json() as Promise<AIReport>;
+  }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
-      {/* Security status bar */}
+    <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A] flex flex-col">
+      {/* Network Status Header */}
       <div className="bg-[#1B2E4B] border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-1.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/50">
-              Secure assessment session
+              Registry Node 001 / SECURE SESSION
             </span>
           </div>
           <span className="font-mono text-[9px] tracking-widest text-white/30 hidden sm:block">
-            modernhuman.io / HCA Assessment Portal
+            HCA-PROTOCOL-V1.4
           </span>
         </div>
       </div>
 
-      {/* Header */}
-      <header className="border-b border-[#1A1A1A]/10 bg-[#FAFAF8]">
+      {/* Main Header */}
+      <header className="border-b border-[#1A1A1A]/10 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 bg-[#1B2E4B] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-wide text-[#1B2E4B]">
+              <div className="text-sm font-semibold tracking-wide text-[#1B2E4B] uppercase tracking-widest">
                 modernhuman.io
-              </div>
-              <div className="text-[10px] text-[#1A1A1A]/40 tracking-widest uppercase">
-                Human Certification Authority
               </div>
             </div>
           </Link>
 
-          {/* Step progress — desktop */}
+          {/* Desktop Steps */}
           <div className="hidden md:flex items-center gap-1">
             {STEPS.map((step, i) => {
               const isDone = i < currentIndex;
               const isActive = step.id === currentStep;
               return (
                 <div key={step.id} className="flex items-center gap-1">
-                  <div
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase transition-colors ${
-                      isActive
-                        ? "bg-[#1B2E4B] text-white"
-                        : isDone
-                          ? "text-[#1B2E4B]/70"
-                          : "text-[#1A1A1A]/30"
-                    }`}
-                  >
-                    <span
-                      className={`w-1 h-1 rounded-full ${
-                        isActive ? "bg-white" : isDone ? "bg-[#1B2E4B]" : "bg-[#1A1A1A]/20"
-                      }`}
-                    />
+                  <div className={`px-3 py-1.5 text-[9px] tracking-[0.2em] uppercase transition-colors flex items-center gap-2 ${
+                    isActive ? "bg-[#1B2E4B] text-white" : isDone ? "text-[#1B2E4B]/60" : "text-[#1A1A1A]/20"
+                  }`}>
+                    <span className={`w-1 h-1 rounded-full ${isActive ? "bg-white" : isDone ? "bg-[#1B2E4B]" : "bg-[#1A1A1A]/20"}`} />
                     {step.label}
                   </div>
-                  {i < STEPS.length - 1 && (
-                    <span className="text-[#1A1A1A]/20 text-xs">&#x2192;</span>
-                  )}
+                  {i < STEPS.length - 1 && <span className="text-[#1A1A1A]/10 text-[10px]">/</span>}
                 </div>
               );
             })}
@@ -219,255 +137,297 @@ export default function AssessPage() {
         </div>
       </header>
 
-      {/* Mobile step indicator */}
-      <div className="md:hidden border-b border-[#1A1A1A]/10">
-        <div className="max-w-6xl mx-auto px-6 py-2">
-          <div className="flex gap-1">
-            {STEPS.map((step, i) => (
-              <div
-                key={step.id}
-                className={`h-0.5 flex-1 transition-colors ${
-                  i <= currentIndex ? "bg-[#1B2E4B]" : "bg-[#1A1A1A]/10"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Mobile Progress Bar */}
+      <div className="md:hidden h-1 bg-[#1A1A1A]/5">
+        <div 
+          className="h-full bg-[#1B2E4B] transition-all duration-500" 
+          style={{ width: `${((currentIndex + 1) / STEPS.length) * 100}%` }} 
+        />
       </div>
 
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="max-w-lg">
-
-          {/* Step 1: Name */}
+      <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-12 flex flex-col items-center">
+        <div className="w-full max-w-2xl">
           {currentStep === "name" && (
-            <NameEntry value={name} onChange={setName} />
-          )}
-
-          {/* Step 4: Questions */}
-          {currentStep === "questions" && (
-            <div className="space-y-8">
-              <div>
-                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 5 of 6
-                </div>
-                <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity assessment</h2>
-                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
-                  Answer each question honestly. The system detects optimised responses.
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+              <div className="text-center">
+                <p className="font-mono text-[10px] tracking-[0.3em] uppercase text-[#1A1A1A]/30 mb-2">Protocol Initialization</p>
+                <h2 className="text-3xl font-bold text-[#1B2E4B] mb-4">Subject Identity declaration</h2>
+                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed font-serif italic max-w-md mx-auto">
+                  Provide the designation that will be cryptographically bound to your movement diagnostic and biometric scan.
                 </p>
               </div>
-              <HumanityQuestions
-                onComplete={(score, answers) => {
-                  setQuestionAnswers(answers);
-                  goNext();
-                }}
-              />
+              <div className="max-w-md mx-auto space-y-4">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="SUBJECT NAME"
+                  className="w-full bg-white border-2 border-[#1B2E4B] px-6 py-4 text-center text-lg font-mono text-[#1B2E4B] placeholder:opacity-20 focus:outline-none transition-all"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) goNext(); }}
+                />
+                <button 
+                  onClick={goNext}
+                  disabled={!name.trim()}
+                  className="w-full bg-[#1B2E4B] text-white py-4 font-bold tracking-[0.3em] uppercase text-[10px] hover:bg-[#1B2E4B]/90 transition-colors disabled:opacity-20"
+                >
+                  Confirm Identity & Start
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Step 2: Webcam */}
           {currentStep === "webcam" && (
-            <div className="space-y-6">
-              <div>
-                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 2 of 6
-                </div>
-                <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Biometric verification</h2>
-                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
-                  A single webcam frame is analyzed for humanoid facial characteristics. Mild
-                  asymmetry improves your score. Perfect symmetry triggers a review flag.
-                </p>
-              </div>
-              <WebcamCheck
+            <div className="animate-in fade-in duration-700">
+               <WebcamCheck
                 onComplete={(score, imageUrl) => {
                   setWebcamScore(score);
                   setWebcamImageUrl(imageUrl);
                   goNext();
                 }}
               />
-              <p className="text-[10px] text-[#1A1A1A]/35 max-w-sm">
-                No images are stored. Analysis occurs locally. We have no interest in your face
-                beyond confirming it exists.
-              </p>
             </div>
           )}
 
-          {/* Step 3: Drawing */}
           {currentStep === "drawing" && (
-            <div className="space-y-6">
-              <div>
-                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 3 of 6
-                </div>
-                <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity drawing sample</h2>
-                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
-                  Draw a dog from memory. A perfect drawing indicates non-human origin. Your
-                  imperfection is the data.
-                </p>
-              </div>
+            <div className="animate-in fade-in duration-700 flex flex-col items-center">
               <DrawingTest
-                onComplete={(score, imageUrl) => {
+                onComplete={(score, url, strokes) => {
                   setDrawingScore(score);
-                  setDrawingImageUrl(imageUrl);
+                  setDrawingImageUrl(url);
+                  setDrawingStrokes(strokes);
                   goNext();
                 }}
               />
             </div>
           )}
 
-          {/* Step 4: Verification Confirmation */}
           {currentStep === "verification" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div>
-                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 4 of 6: Verification
+            <div className="py-12 animate-in fade-in duration-700 text-center">
+              <div className="relative w-24 h-24 mx-auto mb-10">
+                <div className="absolute inset-0 border border-[#1B2E4B]/20 rounded-full animate-ping" />
+                <div className="absolute inset-4 border border-[#1B2E4B]/40 rounded-full animate-ping" style={{ animationDelay: "0.2s" }} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-[#1B2E4B] rounded-full" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#1B2E4B] mb-2">
-                  Humanity confirmed.
-                </h2>
-                <p className="text-sm text-[#1A1A1A]/60 leading-relaxed max-w-sm">
-                  Your sketch sample shows sufficient organic imperfection and non-algorithmic hesitation. 
-                  We detected valid humanoid creative patterns.
-                </p>
               </div>
-
-              {drawingImageUrl && (
-                <div className="border border-[#1A1A1A]/10 p-4 bg-white shadow-sm max-w-sm">
-                   <div className="text-[9px] uppercase tracking-[0.2em] text-[#1A1A1A]/30 mb-2 font-mono">
-                    Subject Sample: Organic Line Work
+              <h3 className="text-2xl font-bold text-[#1B2E4B] mb-2">Analyzing &apos;Hard Proof&apos; Data</h3>
+              <p className="text-sm text-[#1A1A1A]/40 mb-10 font-mono tracking-widest uppercase">[ Liveness Detection Active ]</p>
+              
+              <div className="max-w-sm mx-auto space-y-6">
+                <div className="p-4 bg-white border border-[#1A1A1A]/10 text-left">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B]">Movement Diagnostic Captured</span>
                   </div>
-                  <img src={drawingImageUrl} alt="Drawing" className="w-full h-auto grayscale opacity-80" />
+                  <p className="text-[11px] text-[#1A1A1A]/60 leading-relaxed italic">
+                    Organic jitter and velocity curves have been hashed. Movement diagnostic data is ready for institutional audit.
+                  </p>
                 </div>
-              )}
-
-              <div className="space-y-4 pt-4">
-                 <p className="text-sm font-medium text-[#1A1A1A]/80">
-                  To complete your certification and generate your identity HCA index, please provide further cognitive insights.
-                </p>
-                <button
+                
+                <button 
                   onClick={goNext}
-                  className="bg-[#1B2E4B] text-white px-8 py-4 text-xs font-bold tracking-widest uppercase hover:bg-[#1B2E4B]/90 transition-colors w-full sm:w-auto flex items-center justify-center gap-3"
+                  className="w-full bg-[#1B2E4B] text-white py-4 font-bold tracking-[0.3em] uppercase text-[10px] shadow-2xl hover:bg-[#1B2E4B]/90 transition-all"
                 >
-                  Take Questionnaire for Insights
-                  <span className="text-base">→</span>
+                  Proceed to Cognitive Analysis
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 6: Results */}
-          {currentStep === "results" && (
-            <div className="space-y-6">
-              <div>
-                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 6 of 6
-                </div>
-                <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Assessment complete</h2>
-                <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
-                  Your humanity has been evaluated against the Human Standard Rev. 14.2.
-                </p>
-              </div>
-
-              {analyzing && (
-                <div className="py-16 space-y-6">
-                  {/* Animated scan graphic */}
-                  <div className="flex justify-center">
-                    <div className="relative w-20 h-20">
-                      <div className="absolute inset-0 border border-[#1B2E4B]/20 rounded-full animate-ping" />
-                      <div className="absolute inset-2 border border-[#1B2E4B]/30 rounded-full animate-ping" style={{ animationDelay: "0.3s" }} />
-                      <div className="absolute inset-4 border border-[#1B2E4B]/40 rounded-full animate-ping" style={{ animationDelay: "0.6s" }} />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-[#1B2E4B] rounded-full" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <p className="font-mono text-xs tracking-[0.25em] uppercase text-[#1A1A1A]/60">
-                      Calculating humanity index
-                    </p>
-                    <p className="font-mono text-[10px] tracking-widest text-[#1A1A1A]/30">
-                      Cross-referencing against Human Standard Rev. 14.2
-                    </p>
-                  </div>
-                  {/* Scrolling data lines */}
-                  <div className="border border-[#1A1A1A]/8 bg-white p-4 font-mono text-[9px] text-[#1A1A1A]/30 space-y-1 max-w-sm mx-auto">
-                    {["BODY............analyzing", "MIND............analyzing", "PURPOSE.........analyzing", "CONNECTION......analyzing", "GROWTH..........analyzing", "SECURITY........analyzing"].map((line) => (
-                      <div key={line} className="flex items-center gap-2">
-                        <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
-                        {line}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {analyzeError && (
-                <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 space-y-2">
-                  <p className="font-mono text-xs tracking-widest uppercase">Analysis failed</p>
-                  <p className="text-xs opacity-75">{analyzeError}</p>
-                  <button
-                    onClick={() => {
-                      setAiReport(null);
-                      setAnalyzing(false);
-                      setAnalyzeError(null);
-                      // Re-trigger by briefly toggling step
-                      setCurrentStep("drawing");
-                      setTimeout(() => setCurrentStep("results"), 50);
-                    }}
-                    className="text-xs underline hover:no-underline"
-                  >
-                    Retry analysis
-                  </button>
-                </div>
-              )}
-
-              {!analyzing && !analyzeError && aiReport && (
-                <Certificate
-                  name={name.trim() || "Anonymous Human"}
-                  webcamScore={webcamScore}
-                  drawingScore={drawingScore}
-                  drawingImageUrl={drawingImageUrl}
-                  webcamImageUrl={webcamImageUrl}
-                  dbId={dbId || undefined}
-                  issuedAt={new Date()}
-                  aiReport={aiReport}
-                />
-              )}
+          {currentStep === "questions" && (
+            <div className="animate-in fade-in duration-700">
+               <HumanityQuestions
+                onComplete={async (score, answers) => {
+                  setAnalyzing(true);
+                  try {
+                    const result = await analyzeAssessment(answers, webcamScore, drawingScore);
+                    setAiReport(result);
+                    
+                    const { data, error } = await supabase
+                      .from("assessments")
+                      .insert({
+                        name: name.trim() || "Anonymous Human",
+                        modern_human_score: result.modernHumanScore,
+                        certification_tier: result.certificationTier,
+                        ai_report: result,
+                        webcam_url: webcamImageUrl,
+                        drawing_url: drawingImageUrl,
+                        drawing_path: drawingStrokes,
+                      })
+                      .select("id")
+                      .single();
+                    
+                    if (error) throw error;
+                    if (data) setDbId(data.id);
+                    setCurrentStep("results");
+                  } catch (err: unknown) {
+                    setAnalyzeError(err instanceof Error ? err.message : "Registry process failure.");
+                  } finally {
+                    setAnalyzing(false);
+                  }
+                }}
+              />
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-10 pt-6 border-t border-[#1A1A1A]/10">
-            <button
-              onClick={goPrev}
-              disabled={isFirst || (currentStep === "results" && analyzing)}
-              className="text-sm text-[#1A1A1A]/50 tracking-wide hover:text-[#1A1A1A] transition-colors disabled:opacity-0 disabled:pointer-events-none flex items-center gap-2"
-            >
-              <span className="text-xs">&#x2190;</span>
-              Back
-            </button>
+          {currentStep === "results" && aiReport && (
+            <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-emerald-600 font-bold">Registry Entry Confirmed</span>
+                </div>
+                <h2 className="text-4xl font-bold text-[#1B2E4B] tracking-tight mb-4">Your Humanity Dossier</h2>
+                <p className="text-[#1A1A1A]/40 max-w-lg mx-auto text-sm leading-relaxed font-serif italic">
+                  Your biological signatures are now archived in the HCA Global Registry. Use the assets below to prove your origin.
+                </p>
+              </div>
 
-            {showContinue && (
-              <button
-                onClick={goNext}
-                disabled={!canAdvance}
-                className="bg-[#1B2E4B] text-white px-8 py-3 text-sm tracking-wide font-medium hover:bg-[#1B2E4B]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              <div className="w-full bg-white border border-[#1A1A1A]/10 shadow-2xl p-8 mb-12 relative overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-12">
+                  <div className="flex-1">
+                    <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1B2E4B] font-bold mb-6 pb-2 border-b border-[#1B2E4B]/10">Public sharing protocol</div>
+                    <p className="text-[13px] text-[#1A1A1A]/60 leading-relaxed mb-8">
+                      Share your **Official Dossier Link**. This permanent record features a live 'Hard Proof' movement replay, definitive evidence of your biological origin.
+                    </p>
+                    <div className="space-y-4">
+                       <div className="p-4 bg-[#FAFAF8] border border-[#1A1A1A]/10 flex flex-col gap-2">
+                         <span className="font-mono text-[8px] uppercase tracking-widest text-[#1A1A1A]/40">Permanent Dossier URL</span>
+                         <div className="flex gap-2">
+                           <input 
+                             readOnly 
+                             value={dbId ? `https://modernhuman.io/verify?id=${dbId}` : "REGISTERING..."} 
+                             className="flex-1 bg-white border border-[#1A1A1A]/10 px-3 py-2 text-xs font-mono text-[#1B2E4B]"
+                           />
+                           <button 
+                             onClick={() => {
+                               if (!dbId) return;
+                               navigator.clipboard.writeText(`https://modernhuman.io/verify?id=${dbId}`);
+                               alert("Verification URL copied to registry clipboard.");
+                             }}
+                             className="bg-[#1B2E4B] text-white px-4 py-2 text-[10px] uppercase font-bold tracking-widest hover:bg-[#1B2E4B]/90 transition-colors"
+                           >
+                             Copy
+                           </button>
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <a 
+                            href={`https://twitter.com/intent/tweet?text=I&apos;ve%20been%20verified%20as%20a%20real%20human%20by%20the%20HCA.%20View%20my%20Hard%20Proof%20dossier%20here:&url=https://modernhuman.io/verify?id=${dbId}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="border border-[#1A1A1A]/10 text-center py-3 text-[9px] uppercase font-bold tracking-widest hover:bg-[#FAFAF8] transition-colors"
+                          >Share X</a>
+                          <a 
+                            href={`https://www.linkedin.com/sharing/share-offsite/?url=https://modernhuman.io/verify?id=${dbId}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="border border-[#1A1A1A]/10 text-center py-3 text-[9px] uppercase font-bold tracking-widest hover:bg-[#FAFAF8] transition-colors"
+                          >LinkedIn</a>
+                       </div>
+                    </div>
+                  </div>
+                  <div className="w-full md:w-[240px] shrink-0 border-l border-[#1A1A1A]/5 pl-0 md:pl-12">
+                    <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1A1A1A]/30 mb-4">Record status</div>
+                    <div className="text-4xl font-bold text-[#1B2E4B] mb-2">{aiReport.modernHumanScore}</div>
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B]/40 mb-8">Humanity Index</div>
+                    <div className="space-y-4">
+                      {["Biometric Scan", "Movement Diagnostic", "Cognitive Analysis"].map(m => (
+                        <div key={m} className="flex justify-between items-center text-[10px] font-mono">
+                          <span className="text-[#1A1A1A]/40 uppercase tracking-widest">{m}</span>
+                          <span className="text-emerald-600 font-bold">VERIFIED</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Certificate
+                name={name}
+                webcamScore={webcamScore}
+                drawingScore={drawingScore}
+                drawingImageUrl={drawingImageUrl}
+                issuedAt={new Date()}
+                aiReport={aiReport}
+                webcamImageUrl={webcamImageUrl}
+                dbId={dbId || undefined}
+              />
+            </div>
+          )}
+
+          {/* Analysis Overlay */}
+          {analyzing && (
+            <div className="fixed inset-0 bg-[#FAFAF8]/95 z-[100] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+               <div className="relative w-24 h-24 mb-12">
+                  <div className="absolute inset-0 border-4 border-[#1B2E4B] border-t-transparent rounded-full animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="font-mono text-[10px] font-bold text-[#1B2E4B] animate-pulse uppercase tracking-tighter">HCA</span>
+                  </div>
+               </div>
+               <h3 className="text-2xl font-bold text-[#1B2E4B] mb-4 uppercase tracking-[0.2em]">Processing Record</h3>
+               <p className="text-sm text-[#1A1A1A]/50 font-serif italic mb-12 max-w-sm">
+                Synthesizing biometric data points and cognitive response vectors into a unified humanity index...
+               </p>
+               <div className="space-y-2">
+                 {["DATA-POINT: ORGANIC JITTER HASHED", "DATA-POINT: COGNITIVE FRICTION ANALYZED", "DATA-POINT: BIOMETRIC LIVENESS CONFIRMED"].map((l, i) => (
+                   <div key={l} className="font-mono text-[8px] tracking-[0.3em] text-[#1B2E4B]/20 animate-pulse" style={{ animationDelay: `${i*400}ms` }}>
+                    {l}
+                   </div>
+                 ))}
+               </div>
+            </div>
+          )}
+
+          {analyzeError && (
+             <div className="fixed inset-0 bg-white z-[100] flex items-center justify-center p-6">
+                <div className="max-w-md text-center">
+                  <div className="text-red-500 font-mono text-[10px] tracking-widest uppercase font-bold mb-4">Registry node error</div>
+                  <h3 className="text-2xl font-bold text-[#1B2E4B] mb-4">Verification Interrupted</h3>
+                  <p className="text-sm text-[#1A1A1A]/50 mb-8 leading-relaxed italic">{analyzeError}</p>
+                  <button 
+                    onClick={() => { setAnalyzeError(null); setCurrentStep("questions"); }}
+                    className="bg-[#1B2E4B] text-white px-10 py-4 font-bold tracking-widest uppercase text-[10px]"
+                  >
+                    Retry Protocol
+                  </button>
+                </div>
+             </div>
+          )}
+
+          {/* Bottom Nav */}
+          {!analyzing && currentStep !== "results" && (
+            <div className="mt-16 pt-8 border-t border-[#1A1A1A]/10 flex justify-between items-center">
+              <button 
+                onClick={goPrev}
+                disabled={isFirst || currentStep === "verification"}
+                className="text-[10px] font-mono uppercase tracking-widest text-[#1A1A1A]/30 hover:text-[#1B2E4B] transition-colors disabled:opacity-0"
               >
-                Continue
+                [ Go Back ]
               </button>
-            )}
-
-            {isLast && !analyzing && (
-              <Link
-                href="/"
-                className="text-sm text-[#1A1A1A]/50 tracking-wide hover:text-[#1A1A1A] transition-colors"
-              >
-                Return to registry
-              </Link>
-            )}
-          </div>
+              {showContinue && (
+                <button 
+                  onClick={goNext}
+                  disabled={!canAdvance}
+                  className="bg-[#1B2E4B] text-white px-8 py-4 text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-[#1B2E4B] transition-all disabled:opacity-10 shadow-xl"
+                >
+                  Confirm & Proceed
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-8 bg-white border-t border-[#1A1A1A]/5">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[9px] font-mono text-[#1A1A1A]/30 uppercase tracking-widest">
+           <div className="flex items-center gap-4">
+              <span>HCA Registry Portal</span>
+              <span>ISO-9001-26</span>
+           </div>
+           <div>© 2026 Human Certification Authority</div>
+        </div>
+      </footer>
     </div>
   );
 }

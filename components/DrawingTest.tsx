@@ -13,7 +13,7 @@ interface Stroke {
 }
 
 interface DrawingTestProps {
-  onComplete: (score: number, imageDataUrl: string) => void;
+  onComplete: (score: number, imageDataUrl: string, strokes: Stroke[]) => void;
 }
 
 function analyzeDrawing(strokes: Stroke[], startTime: number): number {
@@ -99,7 +99,7 @@ export default function DrawingTest({ onComplete }: DrawingTestProps) {
     if (!canvas) return;
     const imageDataUrl = canvas.toDataURL("image/png");
     const score = analyzeDrawing(strokesRef.current, startTimeRef.current);
-    onComplete(score, imageDataUrl);
+    onComplete(score, imageDataUrl, strokesRef.current);
   }, [onComplete]);
 
   // Start countdown on mount
