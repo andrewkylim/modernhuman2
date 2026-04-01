@@ -137,18 +137,18 @@ const tiers = [
 const steps = [
   {
     number: "01",
-    title: "Humanity Questionnaire",
-    description: "Twelve questions measuring irrationality, inconsistency, and behavioral unpredictability. Correct answers do not exist.",
-  },
-  {
-    number: "02",
     title: "Biometric Verification",
     description: "Webcam capture confirms humanoid facial structure. Asymmetry is expected. Perfection flags for review.",
   },
   {
-    number: "03",
+    number: "02",
     title: "Drawing Sample",
     description: "Draw a dog from memory. The degree of failure is analyzed. A perfect rendering is grounds for rejection.",
+  },
+  {
+    number: "03",
+    title: "Humanity Questionnaire",
+    description: "Twelve questions measuring irrationality, inconsistency, and behavioral unpredictability. Correct answers do not exist.",
   },
   {
     number: "04",

@@ -55,9 +55,9 @@ function NameEntry({
 
 const STEPS = [
   { id: "name",      label: "Identity"   },
-  { id: "questions", label: "Assessment" },
   { id: "webcam",    label: "Biometric"  },
   { id: "drawing",   label: "Drawing"    },
+  { id: "questions", label: "Assessment" },
   { id: "results",   label: "Certificate"},
 ] as const;
 
@@ -217,12 +217,12 @@ export default function AssessPage() {
             <NameEntry value={name} onChange={setName} />
           )}
 
-          {/* Step 2: Questions */}
+          {/* Step 4: Questions */}
           {currentStep === "questions" && (
             <div className="space-y-8">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 2 of 5
+                  Step 4 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity assessment</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -238,12 +238,12 @@ export default function AssessPage() {
             </div>
           )}
 
-          {/* Step 3: Webcam */}
+          {/* Step 2: Webcam */}
           {currentStep === "webcam" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 3 of 5
+                  Step 2 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Biometric verification</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -264,12 +264,12 @@ export default function AssessPage() {
             </div>
           )}
 
-          {/* Step 4: Drawing */}
+          {/* Step 3: Drawing */}
           {currentStep === "drawing" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 4 of 5
+                  Step 3 of 5
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity drawing sample</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
