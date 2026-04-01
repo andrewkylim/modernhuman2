@@ -31,7 +31,7 @@ interface CertificateProps {
 // ─── Radar chart ─────────────────────────────────────────────────────────────
 
 function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
-  const ORDER = ["body", "mind", "purpose", "connection", "growth", "security"];
+  const ORDER = ["bio-sensory", "cognitive-friction", "temporal-value", "irrational-link", "motor-autonomy", "biometric-presence"];
   const cx = 110, cy = 110, maxR = 80;
   const gridLevels = [0.25, 0.5, 0.75, 1.0];
 
@@ -105,9 +105,9 @@ function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
 const TIER_COLORS: Record<string, string> = {
   Bronze:   "#92400e",
   Silver:   "#374151",
-  Gold:     "#92400e",
-  Platinum: "#374151",
-  Diamond:  "#1a2744",
+  Gold:     "#B45309",
+  Platinum: "#1E293B",
+  Diamond:  "#111827",
 };
 
 function ProfileFramePreview({ webcamImageUrl, certificationTier, renderFn }: { 
@@ -166,7 +166,7 @@ export default function Certificate({
   const { domains, modernHumanScore, overallAnalysis, certificationTier,
     tierDescriptor, tierRationale } = aiReport;
 
-  const DOMAIN_ORDER = ["body", "mind", "purpose", "connection", "growth", "security"];
+  const DOMAIN_ORDER = ["bio-sensory", "cognitive-friction", "temporal-value", "irrational-link", "motor-autonomy", "biometric-presence"];
 
   async function handleDownload() {
     if (!certRef.current || downloading) return;

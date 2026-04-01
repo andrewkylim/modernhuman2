@@ -24,11 +24,11 @@ interface Stroke {
 // ─── Step config ──────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { id: "name",         label: "Identity"   },
-  { id: "webcam",       label: "Biometric Scan"  },
-  { id: "drawing",      label: "Movement Diagnostic"    },
-  { id: "verification", label: "Liveness Proof" },
-  { id: "questions",    label: "Cognitive Analysis" },
+  { id: "name",         label: "Biometric Identity"   },
+  { id: "webcam",       label: "Biometric Liveness"  },
+  { id: "drawing",      label: "Motor Diagnostic"    },
+  { id: "verification", label: "Verification Synthesis" },
+  { id: "questions",    label: "Cognitive Profile" },
   { id: "results",      label: "Official Record"},
 ] as const;
 
@@ -116,8 +116,14 @@ export default function AssessPage() {
             </div>
           </Link>
 
-          {/* Desktop Steps */}
+          <Link href="/registry" className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#1B2E4B]/40 hover:text-[#1B2E4B] transition-colors md:hidden">
+            Registry
+          </Link>
+
           <div className="hidden md:flex items-center gap-1">
+            <Link href="/registry" className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#1B2E4B]/40 hover:text-[#1B2E4B] transition-colors mr-6">
+              [ Public Registry ]
+            </Link>
             {STEPS.map((step, i) => {
               const isDone = i < currentIndex;
               const isActive = step.id === currentStep;
@@ -162,16 +168,16 @@ export default function AssessPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="SUBJECT NAME"
-                  className="w-full bg-white border-2 border-[#1B2E4B] px-6 py-4 text-center text-lg font-mono text-[#1B2E4B] placeholder:opacity-20 focus:outline-none transition-all"
+                  className="w-full bg-white border-2 border-[#1B2E4B] px-6 py-4 text-center text-lg font-mono text-[#1B2E4B] placeholder:opacity-20 focus:outline-none transition-all rounded-none"
                   autoFocus
                   onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) goNext(); }}
                 />
                 <button 
                   onClick={goNext}
                   disabled={!name.trim()}
-                  className="w-full bg-[#1B2E4B] text-white py-4 font-bold tracking-[0.3em] uppercase text-[10px] hover:bg-[#1B2E4B]/90 transition-colors disabled:opacity-20"
+                  className="w-full bg-[#1B2E4B] text-white py-4 font-bold tracking-[0.3em] uppercase text-[10px] hover:bg-[#1B2E4B]/90 transition-colors disabled:opacity-20 shadow-xl"
                 >
-                  Confirm Identity & Start
+                  Confirm Identity & Start Protocol
                 </button>
               </div>
             </div>
@@ -203,33 +209,51 @@ export default function AssessPage() {
           )}
 
           {currentStep === "verification" && (
-            <div className="py-12 animate-in fade-in duration-700 text-center">
-              <div className="relative w-24 h-24 mx-auto mb-10">
-                <div className="absolute inset-0 border border-[#1B2E4B]/20 rounded-full animate-ping" />
-                <div className="absolute inset-4 border border-[#1B2E4B]/40 rounded-full animate-ping" style={{ animationDelay: "0.2s" }} />
+            <div className="py-12 animate-in fade-in duration-1000 text-center">
+              <div className="relative w-32 h-32 mx-auto mb-12">
+                <div className="absolute inset-0 border-2 border-[#1B2E4B]/5 rounded-full" />
+                <div className="absolute inset-0 border-t-2 border-[#1B2E4B] rounded-full animate-spin" />
+                <div className="absolute inset-4 border border-[#1B2E4B]/10 rounded-full animate-pulse" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-[#1B2E4B] rounded-full" />
+                  <span className="font-mono text-[10px] font-bold text-[#1B2E4B] animate-pulse">SYNTHESIZING</span>
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-[#1B2E4B] mb-2">Analyzing &apos;Hard Proof&apos; Data</h3>
-              <p className="text-sm text-[#1A1A1A]/40 mb-10 font-mono tracking-widest uppercase">[ Liveness Detection Active ]</p>
+              <h3 className="text-2xl font-bold text-[#1B2E4B] mb-2 uppercase tracking-tight">Biometric Hash Generation</h3>
+              <p className="text-[10px] text-[#1A1A1A]/40 mb-12 font-mono tracking-[0.25em] uppercase">[ Cross-referencing Hard Proof streams ]</p>
               
-              <div className="max-w-sm mx-auto space-y-6">
-                <div className="p-4 bg-white border border-[#1A1A1A]/10 text-left">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B]">Movement Diagnostic Captured</span>
+              <div className="max-w-md mx-auto space-y-4">
+                <div className="p-5 bg-white border border-[#1B2E4B]/10 text-left relative overflow-hidden group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B] font-bold">Spatial Navigation Verified</span>
+                    </div>
+                    <span className="font-mono text-[8px] text-emerald-600 font-bold">100%</span>
                   </div>
-                  <p className="text-[11px] text-[#1A1A1A]/60 leading-relaxed italic">
-                    Organic jitter and velocity curves have been hashed. Movement diagnostic data is ready for institutional audit.
+                  <p className="text-[11px] text-[#1A1A1A]/50 leading-relaxed italic font-serif">
+                    Nose-to-target coordinates confirmed. Spatial awareness confirms biological presence.
+                  </p>
+                </div>
+
+                <div className="p-5 bg-white border border-[#1B2E4B]/10 text-left relative overflow-hidden group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-[#1B2E4B] font-bold">Organic Jitter Analyzed</span>
+                    </div>
+                    <span className="font-mono text-[8px] text-emerald-600 font-bold">HASHED</span>
+                  </div>
+                  <p className="text-[11px] text-[#1A1A1A]/50 leading-relaxed italic font-serif">
+                    Motor diagnostic data successfully converted to a unique biological signature.
                   </p>
                 </div>
                 
                 <button 
                   onClick={goNext}
-                  className="w-full bg-[#1B2E4B] text-white py-4 font-bold tracking-[0.3em] uppercase text-[10px] shadow-2xl hover:bg-[#1B2E4B]/90 transition-all"
+                  className="w-full bg-[#1B2E4B] text-white py-5 font-bold tracking-[0.4em] uppercase text-[11px] shadow-2xl hover:bg-[#1B2E4B]/90 transition-all mt-8 group"
                 >
-                  Proceed to Cognitive Analysis
+                  Proceed to Cognitive Profile
+                  <span className="ml-4 opacity-30 group-hover:opacity-100 transition-opacity">→</span>
                 </button>
               </div>
             </div>

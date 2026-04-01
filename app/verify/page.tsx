@@ -112,16 +112,25 @@ function VerifyContent() {
             </span>
           </div>
         </div>
-          <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 border border-white/25 flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
-              </div>
-              <div className="text-sm font-semibold tracking-wide text-white uppercase tracking-widest">
-                Official Humanity Dossier
-              </div>
+        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 border border-white/25 flex items-center justify-center">
+              <span className="text-white text-[10px] font-bold tracking-wider">HCA</span>
+            </div>
+            <div className="text-sm font-semibold tracking-wide text-white uppercase tracking-widest">
+              Official Humanity Dossier
             </div>
           </div>
+          
+          <nav className="flex items-center gap-6">
+            <Link href="/registry" className="font-mono text-[9px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+              [ Global Registry ]
+            </Link>
+            <Link href="/assess" className="bg-white text-[#1B2E4B] px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-white/90 transition-colors">
+              Get Certified
+            </Link>
+          </nav>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -240,17 +249,21 @@ function VerifyContent() {
                 Domain Breakdown
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.values(record.ai_report.domains).map((domain) => (
-                  <div key={domain.label} className="border border-[#1A1A1A]/10 p-4 bg-white/50">
-                    <div className="flex justify-between items-baseline mb-2">
-                      <span className="font-mono text-[9px] uppercase font-bold tracking-widest">{domain.label}</span>
-                      <span className="font-mono text-[11px] opacity-40">{domain.score}/100</span>
+                {["bio-sensory", "cognitive-friction", "temporal-value", "irrational-link", "motor-autonomy", "biometric-presence"].map((key) => {
+                  const domain = record.ai_report.domains[key];
+                  if (!domain) return null;
+                  return (
+                    <div key={key} className="border border-[#1A1A1A]/10 p-4 bg-white/50">
+                      <div className="flex justify-between items-baseline mb-2">
+                        <span className="font-mono text-[9px] uppercase font-bold tracking-widest">{domain.label}</span>
+                        <span className="font-mono text-[11px] opacity-40">{domain.score}/100</span>
+                      </div>
+                      <p className="text-xs text-[#1A1A1A]/60 leading-relaxed font-serif italic">
+                        {domain.analysis}
+                      </p>
                     </div>
-                    <p className="text-xs text-[#1A1A1A]/60 leading-relaxed font-serif italic">
-                      {domain.analysis}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

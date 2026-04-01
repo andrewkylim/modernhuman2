@@ -24,8 +24,18 @@ function BiometricViz({ dark = false }: { dark?: boolean }) {
   });
 
   return (
-    <div className="relative w-full max-w-[380px] mx-auto select-none">
-      <svg viewBox="0 0 320 320" className="w-full h-full" aria-hidden="true">
+    <div className="relative w-full max-w-[420px] mx-auto select-none group">
+      {/* Face Image Background Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.22] group-hover:opacity-[0.28] transition-opacity duration-1000 scale-95 group-hover:scale-100 transform duration-1000">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img 
+          src="/images/face.png" 
+          alt="" 
+          className="w-full h-full object-contain mix-blend-lighten grayscale brightness-125"
+        />
+      </div>
+
+      <svg viewBox="0 0 320 320" className="w-full h-full relative z-10" aria-hidden="true">
 
         {/* Static rings */}
         {[140, 112, 86, 62, 40, 20, 8].map((r, i) => (
@@ -175,7 +185,7 @@ export default function Home() {
             </div>
             <nav className="hidden md:flex items-center gap-8 text-xs tracking-widest uppercase text-white/50 font-mono">
               <a href="#protocol" className="hover:text-white transition-colors">Protocol</a>
-              <a href="#registry" className="hover:text-white transition-colors">Registry</a>
+              <Link href="/registry" className="hover:text-white transition-colors">Registry</Link>
               <Link
                 href="/assess/"
                 className="bg-white text-[#1B2E4B] px-4 py-2 hover:bg-white/90 transition-colors normal-case text-xs tracking-wide font-medium"
@@ -224,7 +234,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="hidden md:block">
+            <div className="order-last block opacity-80 md:opacity-100 transform scale-90 md:scale-100 origin-center">
               <BiometricViz dark />
             </div>
           </div>
