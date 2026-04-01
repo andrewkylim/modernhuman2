@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import Certificate, { AIReport } from "@/components/Certificate";
 import HumanityQuestions, { FormattedAnswer } from "@/components/HumanityQuestions";
+import { supabase } from "@/lib/supabase";
 
 // Dynamically import camera/canvas components to avoid SSR issues
 const WebcamCheck = dynamic(() => import("@/components/WebcamCheck"), { ssr: false });
@@ -78,6 +79,7 @@ export default function AssessPage() {
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
   const [aiReport, setAiReport] = useState<AIReport | null>(null);
+  const [dbId, setDbId] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
@@ -117,8 +119,31 @@ export default function AssessPage() {
         if (!res.ok) return res.json().then((e) => Promise.reject(e.message || "Analysis failed"));
         return res.json();
       })
-      .then((report: AIReport) => {
+      .then(async (report: AIReport) => {
         setAiReport(report);
+        
+        // Save to Supabase
+        try {
+          const { data, error } = await supabase
+            .from("assessments")
+            .insert({
+              name: name.trim() || "Anonymous Human",
+              modern_human_score: report.modernHumanScore,
+              certification_tier: report.certificationTier,
+              ai_report: report,
+              webcam_url: webcamImageUrl,
+              drawing_url: drawingImageUrl,
+            })
+            .select("id")
+            .single();
+
+          if (error) throw error;
+          if (data) setDbId(data.id);
+        } catch (dbErr) {
+          console.error("Database save failed:", dbErr);
+          // We still show the report even if save fails, but no permalink
+        }
+        
         setAnalyzing(false);
       })
       .catch((err) => {
@@ -403,6 +428,7 @@ export default function AssessPage() {
                   drawingScore={drawingScore}
                   drawingImageUrl={drawingImageUrl}
                   webcamImageUrl={webcamImageUrl}
+                  dbId={dbId || undefined}
                   issuedAt={new Date()}
                   aiReport={aiReport}
                 />

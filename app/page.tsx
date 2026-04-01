@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 // ─── Biometric iris scan SVG ──────────────────────────────────────────────────
 
@@ -160,6 +164,26 @@ const steps = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const [humanCount, setHumanCount] = useState<string>("47,284");
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const { count, error } = await supabase
+          .from("assessments")
+          .select("*", { count: "exact", head: true });
+        
+        if (!error && count !== null) {
+          // Format with commas, e.g. 1,234
+          setHumanCount(count.toLocaleString());
+        }
+      } catch (err) {
+        console.error("Failed to fetch human count:", err);
+      }
+    }
+    fetchCount();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
 
@@ -253,7 +277,7 @@ export default function Home() {
       <div className="border-b border-[#1A1A1A]/8 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 divide-y xs:divide-y-0 xs:divide-x divide-[#1A1A1A]/8">
           {[
-            { value: "47,284", label: "Certified humans",    ref: "A" },
+            { value: humanCount, label: "Certified humans",    ref: "A" },
             { value: "99.1%",  label: "Detection rate",      ref: "B" },
             { value: "Rev. 14.2", label: "Active standard",  ref: "C" },
             { value: "5 tiers",  label: "Classification levels", ref: "D" },

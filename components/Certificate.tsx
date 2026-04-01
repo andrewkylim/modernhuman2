@@ -25,6 +25,7 @@ interface CertificateProps {
   issuedAt: Date;
   aiReport: AIReport;
   webcamImageUrl?: string;
+  dbId?: string;
 }
 
 // ─── Radar chart ─────────────────────────────────────────────────────────────
@@ -155,6 +156,7 @@ export default function Certificate({
   issuedAt,
   aiReport,
   webcamImageUrl,
+  dbId,
 }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
   const [certNumber] = useState(generateCertNumber);
@@ -520,6 +522,11 @@ export default function Certificate({
           <p style={{ ...mono, fontSize: 9, color: "#888", margin: "0 0 3px" }}>
             Issued: {formatDate(issuedAt)} · Valid for 1 year from date of issue
           </p>
+          {dbId && (
+            <p style={{ ...mono, fontSize: 8, color: "#1B2E4B", margin: "4px 0", fontWeight: "bold" }}>
+              VERIFICATION URL: https://modernhuman.io/verify?id={dbId}
+            </p>
+          )}
           <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0 }}>
             This certificate is issued by the Human Certification Authority and certifies the above
             individual as human pending annual re-evaluation. Verification at modernhuman.io.
