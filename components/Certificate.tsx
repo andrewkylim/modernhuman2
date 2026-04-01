@@ -17,10 +17,10 @@ interface Tier {
 }
 
 function getTier(score: number): Tier {
-  if (score <= 20) return { name: "Bronze", descriptor: "Occasionally Irrational" };
-  if (score <= 40) return { name: "Silver", descriptor: "Reliably Inconsistent" };
-  if (score <= 60) return { name: "Gold", descriptor: "Certified Mortal" };
-  if (score <= 80) return { name: "Platinum", descriptor: "Documented Failure History" };
+  if (score <= 45) return { name: "Bronze", descriptor: "Occasionally Irrational" };
+  if (score <= 58) return { name: "Silver", descriptor: "Reliably Inconsistent" };
+  if (score <= 70) return { name: "Gold", descriptor: "Certified Mortal" };
+  if (score <= 84) return { name: "Platinum", descriptor: "Documented Failure History" };
   return { name: "Diamond", descriptor: "Essentially Chaos" };
 }
 

@@ -93,8 +93,23 @@ export default function AssessPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
+      {/* Security status bar */}
+      <div className="bg-[#1B2E4B] border-b border-white/10">
+        <div className="max-w-6xl mx-auto px-6 py-1.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-white/50">
+              Secure assessment session
+            </span>
+          </div>
+          <span className="font-mono text-[9px] tracking-widest text-white/30 hidden sm:block">
+            modernhuman.io / HCA Assessment Portal
+          </span>
+        </div>
+      </div>
+
       {/* Header */}
-      <header className="border-b border-[#1A1A1A]/10">
+      <header className="border-b border-[#1A1A1A]/10 bg-[#FAFAF8]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-8 h-8 bg-[#1B2E4B] flex items-center justify-center">
