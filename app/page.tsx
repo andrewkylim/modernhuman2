@@ -41,21 +41,27 @@ const tiers = [
 const steps = [
   {
     number: "01",
+    title: "Humanity Questionnaire",
+    description:
+      "Seven questions measuring irrationality, forgetfulness, inconsistency, and general behavioral chaos. Correct answers do not exist.",
+  },
+  {
+    number: "02",
     title: "Biometric Verification",
     description:
       "A brief webcam capture confirms the presence of a face. Asymmetry is expected. Perfection is a disqualifier.",
   },
   {
-    number: "02",
-    title: "Humanity Drawing Sample",
+    number: "03",
+    title: "Drawing Sample",
     description:
-      "You will be asked to draw a circle. Humans cannot draw a perfect circle. The degree of failure is analyzed.",
+      "You will be asked to draw a dog from memory. The degree of failure is analyzed. A perfect drawing is grounds for rejection.",
   },
   {
-    number: "03",
+    number: "04",
     title: "Certification Issued",
     description:
-      "Your results are processed against the Human Standard (Rev. 14.2). A verifiable certificate is generated.",
+      "Results are processed against the Human Standard (Rev. 14.2). A verifiable certificate is generated and available for download.",
   },
 ];
 
@@ -71,10 +77,10 @@ export default function Home() {
             </div>
             <div>
               <div className="text-sm font-semibold tracking-wide text-[#1B2E4B]">
-                Human Certification Authority
+                modernhuman.io
               </div>
-              <div className="text-[10px] text-[#1A1A1A]/50 tracking-widest uppercase">
-                Est. 2026 &bull; Geneva, Switzerland
+              <div className="text-[10px] text-[#1A1A1A]/40 tracking-widest uppercase">
+                Human Certification Authority
               </div>
             </div>
           </div>
@@ -164,7 +170,7 @@ export default function Home() {
             <h2 className="text-3xl font-semibold text-white">How certification works</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-0 border border-white/10">
+          <div className="grid md:grid-cols-4 gap-0 border border-white/10">
             {steps.map((step, i) => (
               <div
                 key={step.number}
@@ -230,7 +236,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-semibold mb-4">Begin your assessment</h2>
           <p className="text-sm text-[#1A1A1A]/50 mb-8 max-w-md mx-auto">
-            The process takes under three minutes. Results are immediate. Certificates are
+            The process takes under five minutes. Results are immediate. Certificates are
             formatted for professional use.
           </p>
           <Link
@@ -252,7 +258,7 @@ export default function Home() {
                   <span className="text-white text-[8px] font-bold tracking-wider">HCA</span>
                 </div>
                 <span className="text-white/70 text-xs font-semibold tracking-wide">
-                  Human Certification Authority
+                  modernhuman.io
                 </span>
               </div>
               <p className="text-xs leading-relaxed">
