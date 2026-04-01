@@ -191,19 +191,26 @@ interface Props {
 export default function HumanityQuestions({ onComplete }: Props) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [advancing, setAdvancing] = useState(false);
 
   const current = QUESTIONS[currentIdx];
   const isLast = currentIdx === QUESTIONS.length - 1;
   const progress = (currentIdx / QUESTIONS.length) * 100;
 
+  // Guard: if somehow out of bounds, render nothing
+  if (!current) return null;
+
   function selectOption(optionIdx: number) {
+    if (advancing) return;
+    setAdvancing(true);
+
     const updated = { ...answers, [current.id]: optionIdx };
     setAnswers(updated);
 
-    // Auto-advance after short delay
     setTimeout(() => {
       if (!isLast) {
         setCurrentIdx((i) => i + 1);
+        setAdvancing(false);
       } else {
         submit(updated);
       }
@@ -283,6 +290,7 @@ export default function HumanityQuestions({ onComplete }: Props) {
             <button
               key={idx}
               onClick={() => selectOption(idx)}
+              disabled={advancing && !selected}
               className={`w-full text-left text-sm px-4 py-3 border transition-all ${
                 selected
                   ? "border-[#1B2E4B] bg-[#1B2E4B] text-white"
