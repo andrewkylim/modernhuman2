@@ -23,7 +23,7 @@ function NameEntry({
     <div className="space-y-6">
       <div>
         <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-          Step 1 of 5
+          Step 1 of 6
         </div>
         <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Identity registration</h2>
         <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -57,6 +57,7 @@ const STEPS = [
   { id: "name",      label: "Identity"   },
   { id: "webcam",    label: "Biometric"  },
   { id: "drawing",   label: "Drawing"    },
+  { id: "verification", label: "Verification" },
   { id: "questions", label: "Assessment" },
   { id: "results",   label: "Certificate"},
 ] as const;
@@ -64,7 +65,7 @@ const STEPS = [
 type StepId = (typeof STEPS)[number]["id"];
 
 // Steps that auto-advance — no Continue button shown
-const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "questions"];
+const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "verification", "questions"];
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -223,7 +224,7 @@ export default function AssessPage() {
             <div className="space-y-8">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 4 of 5
+                  Step 5 of 6
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity assessment</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -244,7 +245,7 @@ export default function AssessPage() {
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 2 of 5
+                  Step 2 of 6
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Biometric verification</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -271,7 +272,7 @@ export default function AssessPage() {
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 3 of 5
+                  Step 3 of 6
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Humanity drawing sample</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">
@@ -289,12 +290,52 @@ export default function AssessPage() {
             </div>
           )}
 
-          {/* Step 5: Results */}
+          {/* Step 4: Verification Confirmation */}
+          {currentStep === "verification" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div>
+                <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
+                  Step 4 of 6: Verification
+                </div>
+                <h2 className="text-3xl font-bold text-[#1B2E4B] mb-2">
+                  Humanity confirmed.
+                </h2>
+                <p className="text-sm text-[#1A1A1A]/60 leading-relaxed max-w-sm">
+                  Your sketch sample shows sufficient organic imperfection and non-algorithmic hesitation. 
+                  We detected valid humanoid creative patterns.
+                </p>
+              </div>
+
+              {drawingImageUrl && (
+                <div className="border border-[#1A1A1A]/10 p-4 bg-white shadow-sm max-w-sm">
+                   <div className="text-[9px] uppercase tracking-[0.2em] text-[#1A1A1A]/30 mb-2 font-mono">
+                    Subject Sample: Organic Line Work
+                  </div>
+                  <img src={drawingImageUrl} alt="Drawing" className="w-full h-auto grayscale opacity-80" />
+                </div>
+              )}
+
+              <div className="space-y-4 pt-4">
+                 <p className="text-sm font-medium text-[#1A1A1A]/80">
+                  To complete your certification and generate your identity HCA index, please provide further cognitive insights.
+                </p>
+                <button
+                  onClick={goNext}
+                  className="bg-[#1B2E4B] text-white px-8 py-4 text-xs font-bold tracking-widest uppercase hover:bg-[#1B2E4B]/90 transition-colors w-full sm:w-auto flex items-center justify-center gap-3"
+                >
+                  Take Questionnaire for Insights
+                  <span className="text-base">→</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Results */}
           {currentStep === "results" && (
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] tracking-widest uppercase text-[#1A1A1A]/40 mb-2">
-                  Step 5 of 5
+                  Step 6 of 6
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1A1A1A] mb-2">Assessment complete</h2>
                 <p className="text-sm text-[#1A1A1A]/50 leading-relaxed max-w-sm">

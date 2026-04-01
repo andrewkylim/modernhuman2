@@ -226,6 +226,14 @@ export default function DrawingTest({ onComplete }: DrawingTestProps) {
         onTouchEnd={handleEnd}
       />
 
+      <button
+        onClick={finalize}
+        disabled={strokeCount === 0}
+        className="bg-[#1B2E4B] text-white px-8 py-3 text-xs tracking-widest uppercase font-medium hover:bg-[#1B2E4B]/90 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+      >
+        Finalize Sketch
+      </button>
+
       {/* Status line */}
       <p className="font-mono text-xs text-gray-400 self-start">
         {strokeCount === 0
