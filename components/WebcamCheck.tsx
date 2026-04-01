@@ -33,7 +33,7 @@ const STATUS_TEXT: Record<Status, string> = {
 };
 
 interface Props {
-  onComplete: (score: number) => void;
+  onComplete: (score: number, imageUrl: string) => void;
 }
 
 export default function WebcamCheck({ onComplete }: Props) {
@@ -131,9 +131,21 @@ export default function WebcamCheck({ onComplete }: Props) {
           if (!runningRef.current) return;
           setStatus('complete');
           const score = Math.floor(Math.random() * 41) + 60; // 60–100
+
+          // Capture a still frame from the video
+          let imageUrl = '';
+          const vid = videoRef.current;
+          if (vid) {
+            const canvas = document.createElement('canvas');
+            canvas.width = vid.videoWidth;
+            canvas.height = vid.videoHeight;
+            canvas.getContext('2d')?.drawImage(vid, 0, 0);
+            imageUrl = canvas.toDataURL('image/jpeg', 0.85);
+          }
+
           setTimeout(() => {
             stopAll();
-            onComplete(score);
+            onComplete(score, imageUrl);
           }, 1_000);
         }, 900);
 

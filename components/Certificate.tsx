@@ -24,6 +24,7 @@ interface CertificateProps {
   drawingImageUrl: string;
   issuedAt: Date;
   aiReport: AIReport;
+  webcamImageUrl?: string;
 }
 
 // ─── Radar chart ─────────────────────────────────────────────────────────────
@@ -128,10 +129,13 @@ export default function Certificate({
   drawingImageUrl,
   issuedAt,
   aiReport,
+  webcamImageUrl,
 }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
   const [certNumber] = useState(generateCertNumber);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingFrame, setDownloadingFrame] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { domains, modernHumanScore, overallAnalysis, certificationTier,
     tierDescriptor, tierRationale } = aiReport;
@@ -156,6 +160,116 @@ export default function Certificate({
     } finally {
       setDownloading(false);
     }
+  }
+
+  async function handleDownloadProfileFrame() {
+    if (downloadingFrame) return;
+    setDownloadingFrame(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 400;
+      const ctx = canvas.getContext("2d")!;
+
+      // Background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 400, 400);
+
+      // Clip circle for face
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(200, 200, 162, 0, Math.PI * 2);
+      ctx.clip();
+
+      if (webcamImageUrl) {
+        await new Promise<void>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const size = Math.min(img.width, img.height);
+            const sx = (img.width - size) / 2;
+            const sy = (img.height - size) / 2;
+            ctx.drawImage(img, sx, sy, size, size, 200 - 162, 200 - 162, 324, 324);
+            resolve();
+          };
+          img.onerror = () => resolve();
+          img.src = webcamImageUrl!;
+        });
+      } else {
+        ctx.fillStyle = "#1B2E4B";
+        ctx.fillRect(0, 0, 400, 400);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 14px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("NO FACE CAPTURED", 200, 200);
+      }
+
+      ctx.restore();
+
+      // Ring
+      ctx.beginPath();
+      ctx.arc(200, 200, 183, 0, Math.PI * 2);
+      ctx.strokeStyle = "#1B2E4B";
+      ctx.lineWidth = 34;
+      ctx.stroke();
+
+      // Curved text around ring
+      const text = "HUMAN CERTIFIED · MODERNHUMAN.IO";
+      const anglePerChar = (Math.PI * 2) / text.length;
+      const startAngle = -Math.PI / 2;
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let i = 0; i < text.length; i++) {
+        const angle = startAngle + i * anglePerChar;
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.rotate(angle);
+        ctx.translate(0, -183);
+        ctx.fillText(text[i], 0, 0);
+        ctx.restore();
+      }
+
+      // Badge pill at bottom (~270deg = bottom of ring)
+      const badgeText = certificationTier.toUpperCase();
+      const badgeAngle = Math.PI / 2; // 90deg = bottom
+      const badgeCx = 200 + 183 * Math.cos(badgeAngle);
+      const badgeCy = 200 + 183 * Math.sin(badgeAngle);
+      const badgeW = 72;
+      const badgeH = 18;
+      ctx.fillStyle = "#1B2E4B";
+      ctx.beginPath();
+      ctx.roundRect(badgeCx - badgeW / 2, badgeCy - badgeH / 2, badgeW, badgeH, 9);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 10px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(badgeText, badgeCx, badgeCy);
+
+      const link = document.createElement("a");
+      link.download = `profile-frame-${certNumber}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } finally {
+      setDownloadingFrame(false);
+    }
+  }
+
+  function handleShareX() {
+    const tweet = `Just got certified human. ${certificationTier} tier. Modern Human Score: ${modernHumanScore}/1000. modernhuman.io/assess`;
+    window.open(
+      "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweet),
+      "_blank"
+    );
+  }
+
+  async function handleCopyLink() {
+    await navigator.clipboard.writeText("https://modernhuman.io/assess");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const certStyle: React.CSSProperties = {
@@ -424,11 +538,38 @@ export default function Certificate({
         </div>
       </div>
 
-      {/* Download */}
-      <button onClick={handleDownload} disabled={downloading}
-        className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-        {downloading ? "Generating..." : "Download Certificate"}
-      </button>
+      {/* Actions */}
+      <div className="flex flex-wrap justify-center gap-4">
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {downloading ? "Generating..." : "Download Certificate"}
+        </button>
+
+        <button
+          onClick={handleDownloadProfileFrame}
+          disabled={downloadingFrame}
+          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {downloadingFrame ? "Creating..." : "Download Profile Frame"}
+        </button>
+
+        <button
+          onClick={handleShareX}
+          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors"
+        >
+          Share on X
+        </button>
+
+        <button
+          onClick={handleCopyLink}
+          className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors min-w-[140px]"
+        >
+          {copied ? "Copied!" : "Copy link"}
+        </button>
+      </div>
     </div>
   );
 }

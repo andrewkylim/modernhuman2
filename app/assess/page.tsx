@@ -73,6 +73,7 @@ export default function AssessPage() {
   const [name, setName] = useState("");
   const [questionAnswers, setQuestionAnswers] = useState<FormattedAnswer[]>([]);
   const [webcamScore, setWebcamScore] = useState(0);
+  const [webcamImageUrl, setWebcamImageUrl] = useState("");
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
   const [aiReport, setAiReport] = useState<AIReport | null>(null);
@@ -252,8 +253,9 @@ export default function AssessPage() {
                 </p>
               </div>
               <WebcamCheck
-                onComplete={(score) => {
+                onComplete={(score, imageUrl) => {
                   setWebcamScore(score);
+                  setWebcamImageUrl(imageUrl);
                   goNext();
                 }}
               />
@@ -359,6 +361,7 @@ export default function AssessPage() {
                   webcamScore={webcamScore}
                   drawingScore={drawingScore}
                   drawingImageUrl={drawingImageUrl}
+                  webcamImageUrl={webcamImageUrl}
                   issuedAt={new Date()}
                   aiReport={aiReport}
                 />

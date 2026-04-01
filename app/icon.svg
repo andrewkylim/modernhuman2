@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" fill="#1B2E4B"/>
+  <text
+    x="16"
+    y="20.5"
+    text-anchor="middle"
+    font-family="system-ui, sans-serif"
+    font-weight="900"
+    font-size="11"
+    letter-spacing="0.05em"
+    fill="white"
+  >HCA</text>
+</svg>

@@ -8,9 +8,20 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Human Certification Authority",
-  description:
-    "The world's first Human Certification Authority. Verifiable proof that you are, in fact, human.",
+  title: "Are you still human? | modernhuman.io",
+  description: "The world's first Human Certification Authority. Get certified in five minutes.",
+  openGraph: {
+    title: "Are you still human? | modernhuman.io",
+    description: "The world's first Human Certification Authority. Get certified in five minutes.",
+    url: "https://modernhuman.io",
+    siteName: "Human Certification Authority",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Are you still human? | modernhuman.io",
+    description: "The world's first Human Certification Authority. Get certified in five minutes.",
+  },
 };
 
 export default function RootLayout({
