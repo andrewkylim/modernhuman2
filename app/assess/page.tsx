@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import Certificate from "@/components/Certificate";
-import HumanityQuestions from "@/components/HumanityQuestions";
+import Certificate, { AIReport } from "@/components/Certificate";
+import HumanityQuestions, { FormattedAnswer } from "@/components/HumanityQuestions";
 
 // Dynamically import camera/canvas components to avoid SSR issues
 const WebcamCheck = dynamic(() => import("@/components/WebcamCheck"), { ssr: false });
@@ -71,10 +71,13 @@ const AUTO_ADVANCE: StepId[] = ["webcam", "drawing", "questions"];
 export default function AssessPage() {
   const [currentStep, setCurrentStep] = useState<StepId>("name");
   const [name, setName] = useState("");
-  const [questionScore, setQuestionScore] = useState(0);
+  const [questionAnswers, setQuestionAnswers] = useState<FormattedAnswer[]>([]);
   const [webcamScore, setWebcamScore] = useState(0);
   const [drawingScore, setDrawingScore] = useState(0);
   const [drawingImageUrl, setDrawingImageUrl] = useState("");
+  const [aiReport, setAiReport] = useState<AIReport | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const currentIndex = STEPS.findIndex((s) => s.id === currentStep);
   const isFirst = currentIndex === 0;
@@ -88,8 +91,39 @@ export default function AssessPage() {
     if (!isFirst) setCurrentStep(STEPS[currentIndex - 1].id);
   }
 
-  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep);
+  const showContinue = !isLast && !AUTO_ADVANCE.includes(currentStep) && currentStep !== "results";
   const canAdvance = currentStep !== "name" || name.trim().length > 0;
+
+  // Trigger AI analysis when drawing step completes and we reach results
+  useEffect(() => {
+    if (currentStep !== "results" || aiReport || analyzing) return;
+
+    setAnalyzing(true);
+    setAnalyzeError(null);
+
+    fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim() || "Anonymous Human",
+        answers: questionAnswers,
+        webcamScore,
+        drawingScore,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) return res.json().then((e) => Promise.reject(e.message || "Analysis failed"));
+        return res.json();
+      })
+      .then((report: AIReport) => {
+        setAiReport(report);
+        setAnalyzing(false);
+      })
+      .catch((err) => {
+        setAnalyzeError(typeof err === "string" ? err : "Analysis failed. Please try again.");
+        setAnalyzing(false);
+      });
+  }, [currentStep]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
@@ -196,8 +230,8 @@ export default function AssessPage() {
                 </p>
               </div>
               <HumanityQuestions
-                onComplete={(score) => {
-                  setQuestionScore(score);
+                onComplete={(score, answers) => {
+                  setQuestionAnswers(answers);
                   goNext();
                 }}
               />
@@ -265,14 +299,70 @@ export default function AssessPage() {
                   Your humanity has been evaluated against the Human Standard Rev. 14.2.
                 </p>
               </div>
-              <Certificate
-                name={name.trim() || "Anonymous Human"}
-                questionScore={questionScore}
-                webcamScore={webcamScore}
-                drawingScore={drawingScore}
-                drawingImageUrl={drawingImageUrl}
-                issuedAt={new Date()}
-              />
+
+              {analyzing && (
+                <div className="py-16 space-y-6">
+                  {/* Animated scan graphic */}
+                  <div className="flex justify-center">
+                    <div className="relative w-20 h-20">
+                      <div className="absolute inset-0 border border-[#1B2E4B]/20 rounded-full animate-ping" />
+                      <div className="absolute inset-2 border border-[#1B2E4B]/30 rounded-full animate-ping" style={{ animationDelay: "0.3s" }} />
+                      <div className="absolute inset-4 border border-[#1B2E4B]/40 rounded-full animate-ping" style={{ animationDelay: "0.6s" }} />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-[#1B2E4B] rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="font-mono text-xs tracking-[0.25em] uppercase text-[#1A1A1A]/60">
+                      Calculating humanity index
+                    </p>
+                    <p className="font-mono text-[10px] tracking-widest text-[#1A1A1A]/30">
+                      Cross-referencing against Human Standard Rev. 14.2
+                    </p>
+                  </div>
+                  {/* Scrolling data lines */}
+                  <div className="border border-[#1A1A1A]/8 bg-white p-4 font-mono text-[9px] text-[#1A1A1A]/30 space-y-1 max-w-sm mx-auto">
+                    {["BODY............analyzing", "MIND............analyzing", "PURPOSE.........analyzing", "CONNECTION......analyzing", "GROWTH..........analyzing", "SECURITY........analyzing"].map((line) => (
+                      <div key={line} className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analyzeError && (
+                <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 space-y-2">
+                  <p className="font-mono text-xs tracking-widest uppercase">Analysis failed</p>
+                  <p className="text-xs opacity-75">{analyzeError}</p>
+                  <button
+                    onClick={() => {
+                      setAiReport(null);
+                      setAnalyzing(false);
+                      setAnalyzeError(null);
+                      // Re-trigger by briefly toggling step
+                      setCurrentStep("drawing");
+                      setTimeout(() => setCurrentStep("results"), 50);
+                    }}
+                    className="text-xs underline hover:no-underline"
+                  >
+                    Retry analysis
+                  </button>
+                </div>
+              )}
+
+              {!analyzing && !analyzeError && aiReport && (
+                <Certificate
+                  name={name.trim() || "Anonymous Human"}
+                  webcamScore={webcamScore}
+                  drawingScore={drawingScore}
+                  drawingImageUrl={drawingImageUrl}
+                  issuedAt={new Date()}
+                  aiReport={aiReport}
+                />
+              )}
             </div>
           )}
 
@@ -280,7 +370,7 @@ export default function AssessPage() {
           <div className="flex items-center justify-between mt-10 pt-6 border-t border-[#1A1A1A]/10">
             <button
               onClick={goPrev}
-              disabled={isFirst}
+              disabled={isFirst || (currentStep === "results" && analyzing)}
               className="text-sm text-[#1A1A1A]/50 tracking-wide hover:text-[#1A1A1A] transition-colors disabled:opacity-0 disabled:pointer-events-none flex items-center gap-2"
             >
               <span className="text-xs">&#x2190;</span>
@@ -297,7 +387,7 @@ export default function AssessPage() {
               </button>
             )}
 
-            {isLast && (
+            {isLast && !analyzing && (
               <Link
                 href="/"
                 className="text-sm text-[#1A1A1A]/50 tracking-wide hover:text-[#1A1A1A] transition-colors"

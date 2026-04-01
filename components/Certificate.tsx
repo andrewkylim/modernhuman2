@@ -2,59 +2,143 @@
 
 import { useRef, useState } from "react";
 
+export interface DomainResult {
+  score: number;
+  label: string;
+  analysis: string;
+}
+
+export interface AIReport {
+  domains: Record<string, DomainResult>;
+  modernHumanScore: number;
+  overallAnalysis: string;
+  certificationTier: string;
+  tierDescriptor: string;
+  tierRationale: string;
+}
+
 interface CertificateProps {
   name: string;
-  questionScore: number;
   webcamScore: number;
   drawingScore: number;
   drawingImageUrl: string;
   issuedAt: Date;
+  aiReport: AIReport;
 }
 
-interface Tier {
-  name: string;
-  descriptor: string;
+// ─── Radar chart ─────────────────────────────────────────────────────────────
+
+function RadarChart({ domains }: { domains: Record<string, DomainResult> }) {
+  const ORDER = ["body", "mind", "purpose", "connection", "growth", "security"];
+  const cx = 110, cy = 110, maxR = 80;
+  const gridLevels = [0.25, 0.5, 0.75, 1.0];
+
+  const angleFor = (i: number) => (i * 2 * Math.PI) / ORDER.length - Math.PI / 2;
+
+  const gridPolygons = gridLevels.map((factor) => {
+    const pts = ORDER.map((_, i) => {
+      const a = angleFor(i);
+      const r = factor * maxR;
+      return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+    }).join(" ");
+    return { pts, factor };
+  });
+
+  const scorePoints = ORDER.map((key, i) => {
+    const score = domains[key]?.score ?? 0;
+    const r = (score / 100) * maxR;
+    const a = angleFor(i);
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  });
+
+  const scorePath = scorePoints.map((p) => `${p.x},${p.y}`).join(" ");
+
+  const labels = ORDER.map((key, i) => {
+    const a = angleFor(i);
+    const lr = maxR + 22;
+    return {
+      x: cx + lr * Math.cos(a),
+      y: cy + lr * Math.sin(a),
+      label: domains[key]?.label ?? key,
+      score: domains[key]?.score ?? 0,
+    };
+  });
+
+  return (
+    <svg viewBox="0 0 220 220" style={{ width: 180, height: 180, flexShrink: 0 }}>
+      {/* Grid */}
+      {gridPolygons.map(({ pts, factor }) => (
+        <polygon key={factor} points={pts} fill="none" stroke="#1a2744"
+          strokeWidth="0.5" opacity={0.08 + factor * 0.1} />
+      ))}
+      {/* Spokes */}
+      {ORDER.map((_, i) => {
+        const a = angleFor(i);
+        return (
+          <line key={i} x1={cx} y1={cy}
+            x2={cx + maxR * Math.cos(a)} y2={cy + maxR * Math.sin(a)}
+            stroke="#1a2744" strokeWidth="0.5" opacity="0.15" />
+        );
+      })}
+      {/* Score fill */}
+      <polygon points={scorePath} fill="#1a2744" fillOpacity="0.1"
+        stroke="#1a2744" strokeWidth="1.5" />
+      {/* Dots */}
+      {scorePoints.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#1a2744" opacity="0.6" />
+      ))}
+      {/* Labels */}
+      {labels.map((l, i) => (
+        <text key={i} x={l.x} y={l.y} textAnchor="middle" dominantBaseline="middle"
+          fontFamily="monospace" fontSize="7.5" fill="#1a2744" opacity="0.55">
+          {l.label}
+        </text>
+      ))}
+    </svg>
+  );
 }
 
-function getTier(score: number): Tier {
-  if (score <= 45) return { name: "Bronze", descriptor: "Occasionally Irrational" };
-  if (score <= 58) return { name: "Silver", descriptor: "Reliably Inconsistent" };
-  if (score <= 70) return { name: "Gold", descriptor: "Certified Mortal" };
-  if (score <= 84) return { name: "Platinum", descriptor: "Documented Failure History" };
-  return { name: "Diamond", descriptor: "Essentially Chaos" };
-}
+// ─── Tier badge ───────────────────────────────────────────────────────────────
+
+const TIER_COLORS: Record<string, string> = {
+  Bronze:   "#92400e",
+  Silver:   "#374151",
+  Gold:     "#92400e",
+  Platinum: "#374151",
+  Diamond:  "#1a2744",
+};
+
+// ─── Certificate ─────────────────────────────────────────────────────────────
 
 function generateCertNumber(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const segment = () =>
+  const seg = () =>
     Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `HCA-${segment()}-${segment()}`;
+  return `HCA-${seg()}-${seg()}`;
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function formatDate(d: Date) {
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 export default function Certificate({
   name,
-  questionScore,
   webcamScore,
   drawingScore,
   drawingImageUrl,
   issuedAt,
+  aiReport,
 }: CertificateProps) {
   const certRef = useRef<HTMLDivElement>(null);
-  const [certNumber] = useState<string>(() => generateCertNumber());
+  const [certNumber] = useState(generateCertNumber);
   const [downloading, setDownloading] = useState(false);
 
-  const overallScore = Math.round(questionScore * 0.35 + webcamScore * 0.25 + drawingScore * 0.4);
-  const tier = getTier(overallScore);
+  const { domains, modernHumanScore, overallAnalysis, certificationTier,
+    tierDescriptor, tierRationale } = aiReport;
 
-  const handleDownload = async () => {
+  const DOMAIN_ORDER = ["body", "mind", "purpose", "connection", "growth", "security"];
+
+  async function handleDownload() {
     if (!certRef.current || downloading) return;
     setDownloading(true);
     try {
@@ -72,423 +156,277 @@ export default function Certificate({
     } finally {
       setDownloading(false);
     }
+  }
+
+  const certStyle: React.CSSProperties = {
+    backgroundColor: "#FFFDF5",
+    border: "6px double #1a2744",
+    padding: "36px 44px",
+    maxWidth: 720,
+    width: "100%",
+    fontFamily: "Georgia, 'Times New Roman', serif",
+    color: "#1a1a1a",
+    position: "relative",
+    boxSizing: "border-box",
   };
 
+  const mono: React.CSSProperties = { fontFamily: "monospace" };
+
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
-      {/* Certificate document */}
-      <div
-        ref={certRef}
-        style={{
-          backgroundColor: "#FFFDF5",
-          border: "6px double #1a2744",
-          padding: "40px 48px",
-          maxWidth: 680,
-          width: "100%",
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          color: "#1a1a1a",
-          position: "relative",
-          boxSizing: "border-box",
-        }}
-      >
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, width: "100%" }}>
+
+      {/* ── Certificate document ────────────────────────────────────────────── */}
+      <div ref={certRef} style={certStyle}>
+
         {/* Corner ornaments */}
-        {(["topLeft", "topRight", "bottomLeft", "bottomRight"] as const).map((pos) => (
-          <div
-            key={pos}
-            style={{
-              position: "absolute",
-              width: 20,
-              height: 20,
-              top: pos.startsWith("top") ? 12 : undefined,
-              bottom: pos.startsWith("bottom") ? 12 : undefined,
-              left: pos.endsWith("Left") ? 12 : undefined,
-              right: pos.endsWith("Right") ? 12 : undefined,
-              borderTop: pos.startsWith("top") ? "2px solid #1a2744" : undefined,
-              borderBottom: pos.startsWith("bottom") ? "2px solid #1a2744" : undefined,
-              borderLeft: pos.endsWith("Left") ? "2px solid #1a2744" : undefined,
-              borderRight: pos.endsWith("Right") ? "2px solid #1a2744" : undefined,
-            }}
-          />
+        {(["tl","tr","bl","br"] as const).map((pos) => (
+          <div key={pos} style={{
+            position: "absolute",
+            width: 18, height: 18,
+            top: pos.startsWith("t") ? 12 : undefined,
+            bottom: pos.startsWith("b") ? 12 : undefined,
+            left: pos.endsWith("l") ? 12 : undefined,
+            right: pos.endsWith("r") ? 12 : undefined,
+            borderTop: pos.startsWith("t") ? "2px solid #1a2744" : undefined,
+            borderBottom: pos.startsWith("b") ? "2px solid #1a2744" : undefined,
+            borderLeft: pos.endsWith("l") ? "2px solid #1a2744" : undefined,
+            borderRight: pos.endsWith("r") ? "2px solid #1a2744" : undefined,
+          }} />
         ))}
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <p
-            style={{
-              fontFamily: "monospace",
-              fontSize: 10,
-              letterSpacing: "0.3em",
-              color: "#888",
-              textTransform: "uppercase",
-              margin: "0 0 10px",
-            }}
-          >
-            Established 2025 · Registration No. 7,204
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <p style={{ ...mono, fontSize: 9, letterSpacing: "0.3em", color: "#999",
+            textTransform: "uppercase", margin: "0 0 8px" }}>
+            Established 2026 · Registration No. IHR-7291
           </p>
-          <h1
-            style={{
-              fontSize: 20,
-              fontWeight: "bold",
-              letterSpacing: "0.08em",
-              color: "#1a2744",
-              textTransform: "uppercase",
-              margin: "0 0 8px",
-            }}
-          >
+          <h1 style={{ fontSize: 18, fontWeight: "bold", letterSpacing: "0.08em",
+            color: "#1a2744", textTransform: "uppercase", margin: "0 0 6px" }}>
             MODERNHUMAN.IO
           </h1>
-          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744", margin: "0 0 6px" }} />
-          <h2
-            style={{
-              fontSize: 13,
-              letterSpacing: "0.2em",
-              color: "#1a2744",
-              textTransform: "uppercase",
-              margin: "0 0 6px",
-              fontWeight: "normal",
-            }}
-          >
+          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744", margin: "0 0 5px" }} />
+          <h2 style={{ ...mono, fontSize: 11, letterSpacing: "0.2em", color: "#1a2744",
+            textTransform: "uppercase", margin: 0, fontWeight: "normal" }}>
             HUMAN CERTIFICATION AUTHORITY
           </h2>
-          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744" }} />
+          <div style={{ width: "100%", height: 1, backgroundColor: "#1a2744", marginTop: 5 }} />
         </div>
 
-        {/* Certificate number */}
-        <p
-          style={{
-            fontFamily: "monospace",
-            fontSize: 10,
-            color: "#aaa",
-            textAlign: "right",
-            margin: "0 0 20px",
-            letterSpacing: "0.05em",
-          }}
-        >
+        {/* Cert number */}
+        <p style={{ ...mono, fontSize: 9, color: "#bbb", textAlign: "right",
+          margin: "0 0 16px", letterSpacing: "0.05em" }}>
           CERT. NO. {certNumber}
         </p>
 
-        {/* Preamble */}
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: 14,
-            color: "#666",
-            fontStyle: "italic",
-            margin: "0 0 10px",
-          }}
-        >
-          This is to certify that
+        {/* Recipient */}
+        <p style={{ textAlign: "center", fontSize: 12, color: "#777",
+          fontStyle: "italic", margin: "0 0 6px" }}>
+          This certifies that
         </p>
-
-        {/* Recipient name */}
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: 30,
-            fontWeight: "bold",
-            color: "#1a2744",
-            borderBottom: "1px solid #1a2744",
-            paddingBottom: 10,
-            margin: "0 0 18px",
-            letterSpacing: "0.02em",
-          }}
-        >
+        <p style={{ textAlign: "center", fontSize: 28, fontWeight: "bold",
+          color: "#1a2744", borderBottom: "1px solid #1a2744",
+          paddingBottom: 8, margin: "0 0 16px", letterSpacing: "0.02em" }}>
           {name}
         </p>
 
-        {/* Classification */}
-        <div style={{ textAlign: "center", margin: "0 0 24px" }}>
-          <p style={{ fontSize: 14, color: "#555", margin: "0 0 6px" }}>
-            has demonstrated sufficient irregularity to qualify as
+        {/* Scores row */}
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "flex-end", marginBottom: 20 }}>
+          <div>
+            <p style={{ ...mono, fontSize: 9, textTransform: "uppercase",
+              letterSpacing: "0.2em", color: "#888", margin: "0 0 4px" }}>
+              Modern Human Score
+            </p>
+            <p style={{ fontSize: 38, fontWeight: "bold", color: "#1a2744",
+              margin: 0, lineHeight: 1, fontFamily: "monospace" }}>
+              {modernHumanScore}
+              <span style={{ fontSize: 16, color: "#aaa", fontWeight: "normal" }}> /1000</span>
+            </p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ ...mono, fontSize: 9, textTransform: "uppercase",
+              letterSpacing: "0.2em", color: "#888", margin: "0 0 4px" }}>
+              Certification Tier
+            </p>
+            <p style={{ fontSize: 18, fontWeight: "bold", margin: 0,
+              color: TIER_COLORS[certificationTier] || "#1a2744" }}>
+              {certificationTier}
+            </p>
+            <p style={{ fontStyle: "italic", fontSize: 13, color: "#666", margin: "2px 0 0" }}>
+              {tierDescriptor}
+            </p>
+          </div>
+        </div>
+
+        {/* Domain breakdown */}
+        <div style={{ display: "flex", gap: 20, alignItems: "flex-start",
+          borderTop: "1px solid #e0ddd5", borderBottom: "1px solid #e0ddd5",
+          padding: "16px 0", marginBottom: 18 }}>
+
+          {/* Radar */}
+          <RadarChart domains={domains} />
+
+          {/* Domain bars */}
+          <div style={{ flex: 1 }}>
+            <p style={{ ...mono, fontSize: 9, fontWeight: "bold",
+              textTransform: "uppercase", letterSpacing: "0.15em",
+              color: "#555", margin: "0 0 10px" }}>
+              Domain Breakdown
+            </p>
+            {DOMAIN_ORDER.map((key) => {
+              const d = domains[key];
+              if (!d) return null;
+              return (
+                <div key={key} style={{ marginBottom: 7 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between",
+                    alignItems: "baseline", marginBottom: 2 }}>
+                    <span style={{ ...mono, fontSize: 9, textTransform: "uppercase",
+                      letterSpacing: "0.1em", color: "#666" }}>
+                      {d.label}
+                    </span>
+                    <span style={{ ...mono, fontSize: 9, color: "#888" }}>
+                      {d.score}/100
+                    </span>
+                  </div>
+                  <div style={{ height: 3, backgroundColor: "#e8e5de", borderRadius: 2 }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${d.score}%`,
+                      backgroundColor: "#1a2744",
+                      borderRadius: 2,
+                      opacity: 0.5 + d.score / 200,
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Biometric sub-scores */}
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed #ddd" }}>
+              <div style={{ display: "flex", gap: 16 }}>
+                {[
+                  { label: "Biometric Scan", score: webcamScore },
+                  { label: "Drawing Sample", score: drawingScore },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <span style={{ ...mono, fontSize: 8, textTransform: "uppercase",
+                      letterSpacing: "0.1em", color: "#aaa" }}>
+                      {item.label}
+                    </span>
+                    <span style={{ ...mono, fontSize: 9, color: "#888", marginLeft: 6 }}>
+                      {item.score}/100
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Overall analysis */}
+        <div style={{ marginBottom: 18 }}>
+          <p style={{ ...mono, fontSize: 9, fontWeight: "bold", textTransform: "uppercase",
+            letterSpacing: "0.15em", color: "#555", margin: "0 0 8px" }}>
+            Assessment Summary
           </p>
-          <p
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: "#1a2744",
-              margin: "0 0 4px",
-            }}
-          >
-            {tier.name} Tier
+          <p style={{ fontSize: 12, color: "#444", lineHeight: 1.7, margin: "0 0 6px",
+            fontStyle: "italic" }}>
+            &ldquo;{overallAnalysis}&rdquo;
           </p>
-          <p
-            style={{
-              fontSize: 16,
-              color: "#444",
-              fontStyle: "italic",
-              margin: "0 0 8px",
-            }}
-          >
-            {tier.descriptor}
-          </p>
-          <p
-            style={{
-              fontFamily: "monospace",
-              fontSize: 11,
-              color: "#777",
-              margin: 0,
-              letterSpacing: "0.05em",
-            }}
-          >
-            HUMANITY SCORE: {overallScore} / 100
+          <p style={{ ...mono, fontSize: 9, color: "#aaa", margin: 0 }}>
+            Tier rationale: {tierRationale}
           </p>
         </div>
 
-        {/* Assessment breakdown + drawing thumbnail */}
-        <div
-          style={{
-            display: "flex",
-            gap: 24,
-            alignItems: "flex-start",
-            borderTop: "1px solid #ddd",
-            borderBottom: "1px solid #ddd",
-            padding: "16px 0",
-            margin: "0 0 28px",
-          }}
-        >
-          {/* Score table */}
-          <div style={{ flex: 1 }}>
-            <p
-              style={{
-                fontFamily: "monospace",
-                fontSize: 10,
-                fontWeight: "bold",
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: "#555",
-                margin: "0 0 10px",
-              }}
-            >
-              Assessment Summary
-            </p>
-            <table style={{ borderCollapse: "collapse", width: "100%" }}>
-              <tbody>
-                <tr>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      color: "#555",
-                      paddingRight: 12,
-                      paddingBottom: 5,
-                    }}
-                  >
-                    Questionnaire
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      paddingBottom: 5,
-                      width: 40,
-                    }}
-                  >
-                    {questionScore}/100
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 10,
-                      color: "#aaa",
-                      paddingBottom: 5,
-                    }}
-                  >
-                    × 35%
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      color: "#555",
-                      paddingRight: 12,
-                      paddingBottom: 5,
-                    }}
-                  >
-                    Biometric Analysis
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      paddingBottom: 5,
-                      width: 40,
-                    }}
-                  >
-                    {webcamScore}/100
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 10,
-                      color: "#aaa",
-                      paddingBottom: 5,
-                    }}
-                  >
-                    × 25%
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      color: "#555",
-                      paddingRight: 12,
-                      paddingBottom: 5,
-                    }}
-                  >
-                    Drawing Sample
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      paddingBottom: 5,
-                    }}
-                  >
-                    {drawingScore}/100
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 10,
-                      color: "#aaa",
-                      paddingBottom: 5,
-                    }}
-                  >
-                    × 40%
-                  </td>
-                </tr>
-                <tr style={{ borderTop: "1px solid #e5e5e5" }}>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      fontWeight: "bold",
-                      paddingTop: 6,
-                    }}
-                  >
-                    Overall
-                  </td>
-                  <td
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 11,
-                      fontWeight: "bold",
-                      paddingTop: 6,
-                    }}
-                  >
-                    {overallScore}/100
-                  </td>
-                  <td />
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* Drawing thumbnail + signatures */}
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "flex-end", marginBottom: 20 }}>
 
-          {/* Drawing thumbnail */}
           {drawingImageUrl && (
-            <div style={{ textAlign: "center", flexShrink: 0 }}>
+            <div style={{ textAlign: "center" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={drawingImageUrl}
-                alt="Biometric Drawing Sample"
-                style={{
-                  width: 110,
-                  height: 88,
-                  border: "1px solid #ddd",
-                  display: "block",
-                  objectFit: "contain",
-                  backgroundColor: "#fff",
-                }}
-              />
-              <p
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: 9,
-                  color: "#aaa",
-                  marginTop: 4,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                Biometric Drawing Sample
+              <img src={drawingImageUrl} alt="Drawing sample"
+                style={{ width: 80, height: 60, border: "1px solid #ddd",
+                  display: "block", objectFit: "contain", backgroundColor: "#fff" }} />
+              <p style={{ ...mono, fontSize: 8, color: "#bbb", marginTop: 3,
+                textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Drawing sample
               </p>
             </div>
           )}
-        </div>
 
-        {/* Signatures */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            margin: "0 0 28px",
-            gap: 16,
-          }}
-        >
-          {[
-            { sig: "A. Turing", name: "Dr. A. Turing", title: "Chief Humanity Officer" },
-            { sig: "The Board", name: "The Board of", title: "Human Standards" },
-          ].map(({ sig, name: sigName, title }) => (
-            <div key={sigName} style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  borderBottom: "1px solid #555",
-                  width: 160,
-                  paddingBottom: 2,
-                  marginBottom: 4,
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "'Brush Script MT', cursive, Georgia, serif",
-                    fontSize: 22,
-                    color: "#1a2744",
-                    margin: 0,
-                    fontStyle: "italic",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {sig}
-                </p>
+          <div style={{ display: "flex", gap: 40, marginLeft: "auto" }}>
+            {[
+              { sig: "A. Turing", name: "Dr. A. Turing", title: "Chief Humanity Officer" },
+              { sig: "The Board", name: "The Board of", title: "Human Standards" },
+            ].map(({ sig, name: sn, title }) => (
+              <div key={sn} style={{ textAlign: "center" }}>
+                <div style={{ borderBottom: "1px solid #555", width: 140,
+                  paddingBottom: 2, marginBottom: 3 }}>
+                  <p style={{ fontFamily: "'Brush Script MT', cursive, Georgia, serif",
+                    fontSize: 20, color: "#1a2744", margin: 0, fontStyle: "italic",
+                    lineHeight: 1.4 }}>
+                    {sig}
+                  </p>
+                </div>
+                <p style={{ ...mono, fontSize: 9, color: "#666", margin: 0 }}>{sn}</p>
+                <p style={{ ...mono, fontSize: 9, color: "#666", margin: 0 }}>{title}</p>
               </div>
-              <p style={{ fontFamily: "monospace", fontSize: 10, color: "#666", margin: 0 }}>
-                {sigName}
-              </p>
-              <p style={{ fontFamily: "monospace", fontSize: 10, color: "#666", margin: 0 }}>
-                {title}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            textAlign: "center",
-            borderTop: "1px solid #e0ddd5",
-            paddingTop: 12,
-          }}
-        >
-          <p style={{ fontFamily: "monospace", fontSize: 10, color: "#888", margin: "0 0 4px" }}>
+        <div style={{ textAlign: "center", borderTop: "1px solid #e0ddd5", paddingTop: 10 }}>
+          <p style={{ ...mono, fontSize: 9, color: "#888", margin: "0 0 3px" }}>
             Issued: {formatDate(issuedAt)} · Valid for 1 year from date of issue
           </p>
-          <p style={{ fontFamily: "monospace", fontSize: 9, color: "#bbb", margin: 0 }}>
-            This document is issued by the Human Certification Authority and certifies the above
+          <p style={{ ...mono, fontSize: 8, color: "#bbb", margin: 0 }}>
+            This certificate is issued by the Human Certification Authority and certifies the above
             individual as human pending annual re-evaluation. Verification at modernhuman.io.
           </p>
         </div>
       </div>
 
-      {/* Download button */}
-      <button
-        onClick={handleDownload}
-        disabled={downloading}
-        className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-      >
+      {/* ── Domain analysis cards (outside the certificate) ─────────────────── */}
+      <div style={{ width: "100%", maxWidth: 720 }}>
+        <p style={{ fontFamily: "monospace", fontSize: 10, letterSpacing: "0.2em",
+          textTransform: "uppercase", color: "#1A1A1A", opacity: 0.4, marginBottom: 12 }}>
+          Domain Analysis
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {DOMAIN_ORDER.map((key) => {
+            const d = domains[key];
+            if (!d) return null;
+            return (
+              <div key={key} style={{ border: "1px solid rgba(26,26,26,0.1)",
+                padding: "12px 14px", backgroundColor: "#FAFAF8" }}>
+                <div style={{ display: "flex", justifyContent: "space-between",
+                  alignItems: "baseline", marginBottom: 6 }}>
+                  <span style={{ fontFamily: "monospace", fontSize: 9,
+                    textTransform: "uppercase", letterSpacing: "0.15em",
+                    color: "#1B2E4B", fontWeight: "bold" }}>
+                    {d.label}
+                  </span>
+                  <span style={{ fontFamily: "monospace", fontSize: 11,
+                    color: "#1A1A1A", opacity: 0.6 }}>
+                    {d.score}/100
+                  </span>
+                </div>
+                <p style={{ fontFamily: "Georgia, serif", fontSize: 12,
+                  color: "#1A1A1A", opacity: 0.65, lineHeight: 1.6,
+                  margin: 0, fontStyle: "italic" }}>
+                  {d.analysis}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Download */}
+      <button onClick={handleDownload} disabled={downloading}
+        className="font-mono text-xs tracking-widest uppercase border border-gray-800 px-8 py-3 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
         {downloading ? "Generating..." : "Download Certificate"}
       </button>
     </div>
