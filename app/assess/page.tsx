@@ -289,7 +289,7 @@ export default function AssessPage() {
                   <div className="flex-1">
                     <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#1B2E4B] font-bold mb-6 pb-2 border-b border-[#1B2E4B]/10">Public sharing protocol</div>
                     <p className="text-[13px] text-[#1A1A1A]/60 leading-relaxed mb-8">
-                      Share your **Official Dossier Link**. This permanent record features a live 'Hard Proof' movement replay, definitive evidence of your biological origin.
+                      Share your **Official Dossier Link**. This permanent record features a live &apos;Hard Proof&apos; movement replay, definitive evidence of your biological origin.
                     </p>
                     <div className="space-y-4">
                        <div className="p-4 bg-[#FAFAF8] border border-[#1A1A1A]/10 flex flex-col gap-2">
